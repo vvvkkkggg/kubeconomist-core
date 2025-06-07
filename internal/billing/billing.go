@@ -1,10 +1,150 @@
 package billing
 
-//var _ service.Billing = Billing{}	// todo: uncomment me for static check
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"time"
+)
 
+const (
+	baseURL = "https://yandex.cloud/api/priceList/getPriceList"
+)
+
+// Billing структура для работы с API биллинга Yandex Cloud
 type Billing struct {
+	client  *http.Client
+	baseURL string
 }
 
-func New() {
-	panic("implement me")
+func New() *Billing {
+	return &Billing{
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        10,
+				IdleConnTimeout:     30 * time.Second,
+				DisableCompression:  false,
+				DisableKeepAlives:   false,
+				MaxIdleConnsPerHost: 5,
+			},
+		},
+		baseURL: baseURL,
+	}
+}
+
+// PriceResponse структура ответа API
+type PriceResponse struct {
+	SKUs []SKU `json:"skus"`
+}
+
+// SKU представляет единицу хранения в системе ценообразования
+type SKU struct {
+	ID              string           `json:"id"`
+	Name            string           `json:"name"`
+	PricingUnit     string           `json:"pricingUnit"`
+	ServiceID       string           `json:"serviceId"`
+	UsageType       string           `json:"usageType"`
+	Deprecated      bool             `json:"deprecated"`
+	CreatedAt       int64            `json:"createdAt"`
+	PricingVersions []PricingVersion `json:"pricingVersions"`
+	EffectiveTime   int64            `json:"effectiveTime"`
+}
+
+// PricingVersion представляет версию ценообразования
+type PricingVersion struct {
+	ID                string            `json:"id"`
+	PricingExpression PricingExpression `json:"pricingExpression"`
+	EffectiveTime     int64             `json:"effectiveTime"`
+}
+
+// PricingExpression представляет выражение ценообразования
+type PricingExpression struct {
+	Quantum string `json:"quantum"`
+	Rates   []Rate `json:"rates"`
+}
+
+// Rate представляет тарифную ставку
+type Rate struct {
+	StartPricingQuantity string `json:"startPricingQuantity"`
+	UnitPrice            string `json:"unitPrice"`
+}
+
+// GetPrices получает текущие цены для указанного сервиса
+func (b *Billing) GetPrices(ctx context.Context, serviceID string) ([]SKU, error) {
+	params := url.Values{}
+	params.Add("installationCode", "ru")
+	params.Add("services[]", serviceID)
+	params.Add("from", time.Now().Format("2006-01-02"))
+	params.Add("to", time.Now().Format("2006-01-02"))
+	params.Add("pageSize", "50")
+	params.Add("currency", "RUB")
+	params.Add("lang", "ru")
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		"GET",
+		fmt.Sprintf("%s?%s", b.baseURL, params.Encode()),
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := b.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var priceResponse PriceResponse
+	if err := json.NewDecoder(resp.Body).Decode(&priceResponse); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	filteredSKUs := make([]SKU, 0, len(priceResponse.SKUs))
+	for _, sku := range priceResponse.SKUs {
+		if !sku.Deprecated {
+			filteredSKUs = append(filteredSKUs, sku)
+		}
+	}
+
+	return filteredSKUs, nil
+}
+
+// GetPricesForKubernetes получает цены для Kubernetes
+func (b *Billing) GetPricesForKubernetes(ctx context.Context) ([]SKU, error) {
+	const kubernetesServiceID = "dn2af04ph5otc5f23o1h"
+	return b.GetPrices(ctx, kubernetesServiceID)
+}
+
+// GetCurrentPrice возвращает текущую цену для SKU
+func (sku *SKU) GetCurrentPrice() (string, error) {
+	if len(sku.PricingVersions) == 0 {
+		return "", fmt.Errorf("no pricing versions available")
+	}
+
+	latestVersion := sku.PricingVersions[0]
+	if len(latestVersion.PricingExpression.Rates) == 0 {
+		return "", fmt.Errorf("no rates available")
+	}
+
+	return latestVersion.PricingExpression.Rates[0].UnitPrice, nil
+}
+
+// GetEffectiveTime возвращает время вступления цены в силу
+func (pv *PricingVersion) GetEffectiveTime() time.Time {
+	return time.Unix(pv.EffectiveTime/1000, 0)
 }

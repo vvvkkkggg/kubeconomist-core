@@ -93,8 +93,8 @@ func getYandexImages(ctx context.Context, yandex *yandex.Client) (map[string]*co
 	return ycImages, err
 }
 
-func getK8SImages(clientset *kubernetes.Clientset) ([]string, error) {
-	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+func getK8SImages(ctx context.Context, clientset *kubernetes.Clientset) ([]string, error) {
+	namespaces, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get namespaces: %w", err)
 	}
@@ -102,9 +102,10 @@ func getK8SImages(clientset *kubernetes.Clientset) ([]string, error) {
 	imageSet := make(map[string]struct{})
 
 	for _, ns := range namespaces.Items {
-		pods, err := clientset.CoreV1().Pods(ns.Name).List(context.TODO(), metav1.ListOptions{})
+		pods, err := clientset.CoreV1().Pods(ns.Name).List(ctx, metav1.ListOptions{})
 		if err != nil {
 			fmt.Printf("Error getting pods in namespace %s: %v\n", ns.Name, err)
+
 			continue
 		}
 
@@ -171,7 +172,7 @@ func (ro *RegistryOptimizer) Run(ctx context.Context) {
 		panic(err.Error())
 	}
 
-	k8sImages, err := getK8SImages(ro.clientset)
+	k8sImages, err := getK8SImages(ctx, ro.clientset)
 	if err != nil {
 		panic(err.Error())
 	}

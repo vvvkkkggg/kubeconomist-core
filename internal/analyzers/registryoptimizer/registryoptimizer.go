@@ -10,6 +10,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
@@ -32,7 +33,7 @@ type RegistryOptimizer struct {
 	resourceGauge *prometheus.GaugeVec
 }
 
-func NewRegistryOptimizer(billing Biling) *RegistryOptimizer {
+func NewRegistryOptimizer(billing Biling, cfg config.Config) *RegistryOptimizer {
 	ctx := context.Background()
 
 	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
@@ -46,7 +47,7 @@ func NewRegistryOptimizer(billing Biling) *RegistryOptimizer {
 		panic(err.Error())
 	}
 
-	yandex, err := yandex.New(ctx, os.Getenv("YANDEX_TOKEN"))
+	yandex, err := yandex.New(ctx, cfg.Analyzers.VPC.YCToken)
 	if err != nil {
 		panic(err.Error())
 	}

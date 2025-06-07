@@ -7,7 +7,15 @@ import (
 
 type (
 	Config struct {
-		MetricsPort string `mapstructure:"metrics_port" validate:"required"`
+		MetricsPort string          `mapstructure:"metrics_port" validate:"required"`
+		Analyzers   AnalyzersConfig `mapstructure:"analyzers" validate:"required"`
+	}
+
+	AnalyzersConfig struct {
+		krr KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
+	}
+
+	KrrAnalyzerConfig struct {
 	}
 )
 

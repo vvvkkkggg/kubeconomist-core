@@ -1,6 +1,9 @@
 package service
 
-import "github.com/vvvkkkggg/kubeconomist-core/internal/model"
+import (
+	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/service/monitoring"
+)
 
 type ResourceOptimization struct {
 	CPUReqOld model.CPUCount // e.g. 100m → 0.1
@@ -10,15 +13,20 @@ type ResourceOptimization struct {
 }
 
 type Billing interface {
-	GetPriceRUB(cpuCount model.CPUCount, ramCount model.CPUCount) model.PriceRUB
+	GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB
+	GetPriceRAMRUB(platform string, ramCount model.RAMCount) model.PriceRUB
 }
 
 type Service struct {
-	billing Billing
+	billing   Billing
+	collector *monitoring.Collector
 }
 
-func New(b *Billing) *Service {
-	return nil
+func New(b Billing, collector *monitoring.Collector) *Service {
+	return &Service{
+		billing:   b,
+		collector: collector,
+	}
 }
 
 // CalculatePrice iterates over each container’s old vs. new requests,
@@ -38,6 +46,8 @@ func (s *Service) CalculatePrice(rows []ResourceOptimization) (
 
 		currentTotal += curr
 		optimizedTotal += opt
+
+		s.collector.AddResourceConsumption()
 	}
 
 	gain = currentTotal - optimizedTotal

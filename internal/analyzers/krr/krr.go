@@ -82,15 +82,17 @@ func (k *KrrAnalyzer) CalculatePrice(rows []krrOutput) {
 			)
 
 			sendMetrics(
+				*r.Object.Requests.CPU, *r.Recommended.Requests.CPU, // todo: add money multiplier
+				ResourceCPU,
+				ConsumptionMoney,
+			)
+		}
+
+		if r.Object.Requests.Memory != nil && *r.Object.Requests.Memory > *r.Recommended.Requests.Memory {
+			sendMetrics(
 				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory,
 				ResourceRAM,
 				ConsumptionReal,
-			)
-
-			sendMetrics(
-				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory, // todo: add money multiplier
-				ResourceRAM,
-				ConsumptionMoney,
 			)
 
 			sendMetrics(

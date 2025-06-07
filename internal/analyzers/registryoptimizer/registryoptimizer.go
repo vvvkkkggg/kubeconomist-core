@@ -10,6 +10,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +21,7 @@ import (
 var _ analyzers.Analyzer = &RegistryOptimizer{}
 
 type Biling interface {
-	GetRegistryCost() (float64, error)
+	GetContainerRegistryPriceRUB() (model.PriceRUB, error)
 }
 
 type RegistryOptimizer struct {
@@ -177,12 +178,12 @@ func (ro *RegistryOptimizer) Run(ctx context.Context) {
 		panic(err.Error())
 	}
 
-	registryCost, err := ro.billing.GetRegistryCost()
+	registryCost, err := ro.billing.GetContainerRegistryPriceRUB()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	totalCost := computeCost(ycImages, k8sImages, registryCost)
+	totalCost := computeCost(ycImages, k8sImages, float64(registryCost))
 
 	ro.resourceGauge.WithLabelValues().Set(totalCost)
 }

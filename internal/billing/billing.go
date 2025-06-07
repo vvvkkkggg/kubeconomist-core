@@ -269,14 +269,20 @@ func (b *Billing) GetPriceRAMRUB(platform string, ramCount model.RAMCount) (mode
 
 	b.mu.RLock()
 
+	found := false
+
 	for _, sku := range b.computeCloudPrices {
 		ln := strings.ToLower(sku.Name)
 
 		if ln == strings.ToLower(name) {
 			foundedRAM = sku
-
+			found = true
 			break
 		}
+	}
+
+	if !found {
+		return 0, fmt.Errorf("no pricing versions available")
 	}
 
 	b.mu.RUnlock()

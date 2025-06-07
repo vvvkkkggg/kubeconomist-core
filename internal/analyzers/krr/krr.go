@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
 var _ analyzers.Analyzer = &KrrAnalyzer{}
@@ -83,6 +84,12 @@ func (k *KrrAnalyzer) CalculatePrice(rows []KrrOutput) {
 		}
 
 		if r.Object.Requests.CPU != nil && *r.Object.Requests.CPU > *r.Recommended.Requests.CPU {
+			// todo: remove hardcoded platform
+			price, err := k.billing.GetPriceCPURUB("standard-v1", "100", model.CPUCount(*r.Object.Requests.CPU-*r.Recommended.Requests.CPU))
+			if err != nil {
+				panic(err)
+			}
+
 			sendMetrics(
 				*r.Object.Requests.CPU, *r.Recommended.Requests.CPU,
 				ResourceCPU,
@@ -90,13 +97,19 @@ func (k *KrrAnalyzer) CalculatePrice(rows []KrrOutput) {
 			)
 
 			sendMetrics(
-				*r.Object.Requests.CPU, *r.Recommended.Requests.CPU, // todo: add money multiplier
+				*r.Object.Requests.CPU*float64(price), *r.Recommended.Requests.CPU*float64(price), // todo: add money multiplier
 				ResourceCPU,
 				ConsumptionMoney,
 			)
 		}
 
 		if r.Object.Requests.Memory != nil && *r.Object.Requests.Memory > *r.Recommended.Requests.Memory {
+			// todo: remove hardcoded platform
+			price, err := k.billing.GetPriceRAMRUB("standard-v1", model.RAMCount(*r.Object.Requests.Memory-*r.Recommended.Requests.Memory))
+			if err != nil {
+				panic(err)
+			}
+
 			sendMetrics(
 				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory,
 				ResourceRAM,
@@ -104,7 +117,7 @@ func (k *KrrAnalyzer) CalculatePrice(rows []KrrOutput) {
 			)
 
 			sendMetrics(
-				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory, // todo: add money multiplier
+				*r.Object.Requests.Memory*float64(price), *r.Recommended.Requests.Memory*float64(price), // todo: add money multiplier
 				ResourceRAM,
 				ConsumptionMoney,
 			)

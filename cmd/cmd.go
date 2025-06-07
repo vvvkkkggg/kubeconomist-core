@@ -1,6 +1,8 @@
 package cmd
 
-import "github.com/vvvkkkggg/kubeconomist-core/internal/config"
+import (
+	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
+)
 
 func Run() error {
 	cfg, err := config.Load("config/config.yaml")

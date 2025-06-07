@@ -22,6 +22,8 @@ const (
 	computeCloud        = "dn22pas77ftg9h3f2djj"
 )
 
+//var _ analyzers.Billing = &Billing{}
+
 // Billing структура для работы с API биллинга Yandex Cloud
 type Billing struct {
 	client  *http.Client
@@ -139,6 +141,9 @@ func (b *Billing) GetPrices(ctx context.Context, serviceID string) ([]SKU, error
 }
 
 func (b *Billing) UpdatePricesCloudeCompute(ctx context.Context) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	b.computeCloudPrices, _ = b.GetPrices(ctx, computeCloud)
 }
 
@@ -230,7 +235,7 @@ func genRAMNameForGrep(platform string) string {
 	return fmt.Sprintf("%s. RAM", cpu)
 }
 
-func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) (model.PriceRUB, error) {
+func (b *Billing) GetPriceRAMRUB(platform string, ramCount model.RAMCount) (model.PriceRUB, error) {
 	name := genRAMNameForGrep(platform)
 
 	var foundedRAM SKU

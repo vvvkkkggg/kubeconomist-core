@@ -15,7 +15,7 @@ var testConfig = config.KrrAnalyzerConfig{
 }
 
 func setupKrrAnalyzer() KrrAnalyzer {
-	return *NewKrrAnalyzer(nil, nil, testConfig)
+	return *NewKrrAnalyzer(nil, testConfig)
 }
 
 func TestCallKRR(t *testing.T) {

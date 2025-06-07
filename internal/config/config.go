@@ -18,12 +18,17 @@ type (
 
 	AnalyzersConfig struct {
 		KRR KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
+		VPC VPCAnalyzerConfig `mapstructure:"vpc" validate:"required"`
 	}
 
 	KrrAnalyzerConfig struct {
 		PrometheusURL        string `mapstructure:"prometheus_url" validate:"required"`
 		PrometheusAuthHeader string `mapstructure:"prometheus_auth_header" validate:"required"`
 		HistoryDuration      string `mapstructure:"history_duration" validate:"required"`
+	}
+
+	VPCAnalyzerConfig struct {
+		YCToken string `mapstructure:"yc_token" validate:"required"`
 	}
 )
 

@@ -110,6 +110,6 @@ func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
 
 func (v *VPCAnalyzer) Run(ctx context.Context) {}
 
-func (v *VPCAnalyzer) GetCollectors() *prometheus.Collector {
+func (v *VPCAnalyzer) GetCollectors() []prometheus.Collector {
 	return nil
 }

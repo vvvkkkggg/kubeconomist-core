@@ -7,9 +7,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krrstub"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/vpc"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 )
 
 func Run() error {
@@ -23,8 +25,14 @@ func Run() error {
 
 	billing := billing.New()
 
+	yandexClient, err := yandex.New(ctx, cfg.Analyzers.VPC.YCToken)
+	if err != nil {
+		return err
+	}
+
 	analyzerList := []analyzers.Analyzer{
 		krrstub.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
+		vpc.NewVPCAnalyzer(),
 	}
 
 	var collectors []prometheus.Collector

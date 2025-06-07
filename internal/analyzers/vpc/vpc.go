@@ -17,6 +17,7 @@ var _ analyzers.Analyzer = &VPCAnalyzer{}
 
 type VPCAnalyzer struct {
 	yandex *yandex.Client
+	m      *prometheus.GaugeVec
 }
 
 type Address struct {
@@ -28,13 +29,20 @@ type Address struct {
 }
 
 func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
+	m := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "kubeconomist",
+			Subsystem: "vpc",
+			Name:      "ip_status",
+			Help:      "Status of IPs",
+		},
+		[]string{"ip_address"},
+	)
+
 	return &VPCAnalyzer{
 		yandex: ya,
+		m:      m,
 	}
-}
-
-func (v *VPCAnalyzer) Describe(ch chan<- *prometheus.Desc) {
-	ch <- prometheus.NewDesc("kubeconomist_vpc_ip_status", "Status of IPs", []string{"ip_address"}, nil)
 }
 
 func (v *VPCAnalyzer) Collect(ch chan<- prometheus.Metric) {
@@ -108,8 +116,37 @@ func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
 	return addrs, nil
 }
 
-func (v *VPCAnalyzer) Run(ctx context.Context) {}
+func (v *VPCAnalyzer) Run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+		default:
+		}
+
+		addrs, err := v.GetAddresses(context.Background())
+		if err != nil {
+			return
+		}
+
+		for _, addr := range addrs {
+			if !addr.IsReserved {
+				continue
+			}
+
+			isUsed := 0.0
+			if addr.IsUsed {
+				isUsed = 1.0
+			}
+
+			v.m.With(prometheus.Labels{
+				"ip_address": addr.IP,
+			}).Set(isUsed)
+		}
+	}
+}
 
 func (v *VPCAnalyzer) GetCollectors() []prometheus.Collector {
-	return nil
+	return []prometheus.Collector{
+		v.m,
+	}
 }

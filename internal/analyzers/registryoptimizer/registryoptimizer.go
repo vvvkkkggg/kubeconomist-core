@@ -58,8 +58,10 @@ func NewRegistryOptimizer(billing Biling, cfg *config.Config) *RegistryOptimizer
 
 		resourceGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
-				Name: "ycr_registry_storage_cost_per_hour",
-				Help: "Current hourly storage cost for registry images in RUB",
+				Namespace: "kubeconomist",
+				Subsystem: "node_optimizer",
+				Name:      "unused_images_storage_cost_per_hour",
+				Help:      "Current hourly storage cost for registry images in RUB",
 			},
 			[]string{},
 		),
@@ -168,24 +170,26 @@ func computeCost(ycImages map[string]*compute.Image, k8sImages []string, registr
 }
 
 func (ro *RegistryOptimizer) Run(ctx context.Context) {
-	ycImages, err := getYandexImages(ctx, ro.yandex)
-	if err != nil {
-		panic(err.Error())
+	for {
+		ycImages, err := getYandexImages(ctx, ro.yandex)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		k8sImages, err := getK8SImages(ctx, ro.clientset)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		registryCost, err := ro.billing.GetContainerRegistryPriceRUB()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		totalCost := computeCost(ycImages, k8sImages, float64(registryCost))
+
+		ro.resourceGauge.WithLabelValues().Set(totalCost)
 	}
-
-	k8sImages, err := getK8SImages(ctx, ro.clientset)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	registryCost, err := ro.billing.GetContainerRegistryPriceRUB()
-	if err != nil {
-		panic(err.Error())
-	}
-
-	totalCost := computeCost(ycImages, k8sImages, float64(registryCost))
-
-	ro.resourceGauge.WithLabelValues().Set(totalCost)
 }
 
 func (ro *RegistryOptimizer) GetCollectors() []prometheus.Collector {

@@ -5,8 +5,8 @@ import (
 )
 
 type Billing interface {
-	GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB
-	GetPriceRAMRUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB
+	GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) (model.PriceRUB, error)
+	GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) (model.PriceRUB, error)
 }
 
 type Service struct {

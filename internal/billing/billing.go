@@ -181,7 +181,7 @@ func platformMatcher(platform string) string {
 func genCPUNameForGrep(platform, coreFraction string) string {
 	cpu := platformMatcher(platform)
 
-	return fmt.Sprintf("%s. %s", cpu, coreFraction) + "%" + " vCPU"
+	return fmt.Sprintf("%s. %s", cpu, coreFraction) + "%"
 }
 
 func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB {
@@ -207,5 +207,10 @@ func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount 
 
 	res, _ := strconv.ParseFloat(price, 32)
 
-	return model.PriceRUB(res)
+	return model.PriceRUB(res * float64(cpuCount))
+}
+
+func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) model.PriceRUB {
+
+	return 0
 }

@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krr"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krrstub"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
@@ -23,7 +24,7 @@ func Run() error {
 	billing := billing.New()
 
 	analyzerList := []analyzers.Analyzer{
-		krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
+		krrstub.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
 	}
 
 	var collectors []prometheus.Collector
@@ -35,6 +36,8 @@ func Run() error {
 	for _, a := range analyzerList {
 		go a.Run(ctx)
 	}
+
+	slog.Info("analyzers are running")
 
 	if err := metrics.ListenAndServe(
 		ctx,

@@ -1,11 +1,9 @@
-package krr
+package krrstub
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"log/slog"
-	"os/exec"
+	"math/rand/v2"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
@@ -19,15 +17,18 @@ type KrrAnalyzer struct {
 	cfg     config.KrrAnalyzerConfig
 
 	resourceGauge *prometheus.GaugeVec
+	krrStubOutput []KrrOutput
 }
 
 func NewKrrAnalyzer(
 	b analyzers.Billing,
 	cfg config.KrrAnalyzerConfig,
 ) *KrrAnalyzer {
+
 	return &KrrAnalyzer{
-		billing: b,
-		cfg:     cfg,
+		krrStubOutput: []KrrOutput{generateRandomKrrOutput()},
+		billing:       b,
+		cfg:           cfg,
 
 		resourceGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -119,27 +120,84 @@ func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {
 }
 
 func (k *KrrAnalyzer) callKRR() ([]KrrOutput, error) {
-	cmd := exec.Command(
-		"krr", "simple",
-		"-p", k.cfg.PrometheusURL,
-		"--prometheus-auth-header", k.cfg.PrometheusAuthHeader,
-		"--history-duration", k.cfg.HistoryDuration,
-		"-f", "json")
+	return k.krrStubOutput, nil
+}
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+func generateRandomKrrOutput() KrrOutput {
+	cluster := "cluster-" + randomString(5)
+	namespace := "ns-" + randomString(3)
+	container := "container-" + randomString(4)
+	podCount := rand.Int()%3 + 1 // 1-3 пода
 
-	if err := cmd.Run(); err != nil {
-		return nil, err
+	pods := make([]Pod, podCount)
+	for i := 0; i < podCount; i++ {
+		pods[i] = Pod{Name: "pod-" + randomString(5)}
 	}
 
-	resultJSON := stdout.Bytes()
+	// Генерируем текущие значения (object)
+	objectCPU := rand.Float64()*2 + 0.5       // 0.5-2.5 CPU
+	objectMemory := float64(rand.Int()%8 + 2) // 2-10 GB
 
-	var krrResult []KrrOutput
-	if err := json.Unmarshal(resultJSON, &krrResult); err != nil {
-		return nil, err
+	// Генерируем рекомендованные значения (обычно на 20-50% ниже)
+	recommendedCPU := objectCPU * (0.5 + rand.Float64()*0.3)       // 50-80% от текущего
+	recommendedMemory := objectMemory * (0.5 + rand.Float64()*0.3) // 50-80% от текущего
+
+	// Иногда (10% случаев) рекомендации могут быть такими же
+	if rand.Float64() < 0.1 {
+		recommendedCPU = objectCPU
+		recommendedMemory = objectMemory
 	}
 
-	return krrResult, nil
+	// Иногда (10% случаев) одно из значений может быть nil
+	var cpuPtr, memPtr *float64
+	var recCPUPtr, recMemPtr *float64
+
+	if rand.Float64() > 0.1 {
+		cpuPtr = &objectCPU
+		recCPUPtr = &recommendedCPU
+	}
+	if rand.Float64() > 0.1 {
+		memPtr = &objectMemory
+		recMemPtr = &recommendedMemory
+	}
+
+	return KrrOutput{
+		Object: Parameters{
+			Cluster:   cluster,
+			Namespace: namespace,
+			Pods:      pods,
+			Container: container,
+			Requests: Resources{
+				CPU:    cpuPtr,
+				Memory: memPtr,
+			},
+			Limits: Resources{
+				CPU:    cpuPtr,
+				Memory: memPtr,
+			},
+		},
+		Recommended: Parameters{
+			Cluster:   cluster,
+			Namespace: namespace,
+			Pods:      pods,
+			Container: container,
+			Requests: Resources{
+				CPU:    recCPUPtr,
+				Memory: recMemPtr,
+			},
+			Limits: Resources{
+				CPU:    recCPUPtr,
+				Memory: recMemPtr,
+			},
+		},
+	}
+}
+
+func randomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Int()%len(charset)]
+	}
+	return string(b)
 }

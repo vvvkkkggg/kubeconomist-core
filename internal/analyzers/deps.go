@@ -7,4 +7,6 @@ type Billing interface {
 
 	// АХТУНГ. это не учитывает прерываемые вм, тут только обычные
 	GetPriceRAMRUB(platform string, ramCount model.RAMCount) (model.PriceRUB, error)
+
+	GetContainerRegistryPriceRUB() (model.PriceRUB, error)
 }

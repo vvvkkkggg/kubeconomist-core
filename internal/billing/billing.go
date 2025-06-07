@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
@@ -20,16 +21,18 @@ const (
 	baseURL             = "https://yandex.cloud/api/priceList/getPriceList"
 	kubernetesServiceID = "dn2af04ph5otc5f23o1h"
 	computeCloud        = "dn22pas77ftg9h3f2djj"
+	imageRegistry       = "dn2tng436tjcn7cjudv1"
 )
 
-//var _ analyzers.Billing = &Billing{}
+var _ analyzers.Billing = &Billing{}
 
 // Billing структура для работы с API биллинга Yandex Cloud
 type Billing struct {
 	client  *http.Client
 	baseURL string
 
-	computeCloudPrices []SKU
+	computeCloudPrices  []SKU
+	imageRegistryPrices []SKU
 
 	mu sync.RWMutex
 }
@@ -140,11 +143,32 @@ func (b *Billing) GetPrices(ctx context.Context, serviceID string) ([]SKU, error
 	return filteredSKUs, nil
 }
 
-func (b *Billing) UpdatePricesCloudeCompute(ctx context.Context) {
+func (b *Billing) UpdatePricesCloudeCompute(ctx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	b.computeCloudPrices, _ = b.GetPrices(ctx, computeCloud)
+	var err error
+
+	b.computeCloudPrices, err = b.GetPrices(ctx, computeCloud)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Billing) UpdatePricesContainerRegistry(ctx context.Context) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	var err error
+
+	b.imageRegistryPrices, err = b.GetPrices(ctx, imageRegistry)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetPricesForKubernetes получает цены для Kubernetes
@@ -272,4 +296,34 @@ func (b *Billing) GetPriceRAMRUB(platform string, ramCount model.RAMCount) (mode
 	}
 
 	return model.PriceRUB(res * float64(ramCount)), nil
+}
+
+func (b *Billing) GetContainerRegistryPriceRUB() (model.PriceRUB, error) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	for _, h := range b.imageRegistryPrices {
+		if h.Name == "Container Registry – занятое место в хранилище" {
+			if len(h.PricingVersions) != 1 {
+				return 0, fmt.Errorf("unexpected length of pricing versions: %d",
+					len(h.PricingVersions))
+			}
+
+			if len(h.PricingVersions[0].PricingExpression.Rates) != 1 {
+				return 0, fmt.Errorf("unexpected length of pricing expressions rates: %d",
+					len(h.PricingVersions[0].PricingExpression.Rates))
+			}
+
+			price := h.PricingVersions[0].PricingExpression.Rates[0].UnitPrice
+
+			res, err := strconv.ParseFloat(price, 32)
+			if err != nil {
+				return 0, errors.New("failed to parse float")
+			}
+
+			return model.PriceRUB(res), nil
+		}
+	}
+
+	return 0.0, errors.New("needed block is not found")
 }

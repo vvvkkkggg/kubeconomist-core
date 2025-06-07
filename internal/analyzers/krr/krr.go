@@ -24,10 +24,20 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 }
 
 type ResourceOptimization struct {
-	CPUReqOld model.CPUCount // e.g. 100m → 0.1
-	CPUReqNew model.CPUCount // e.g. 50m  → 0.05
-	RAMReqOld model.CPUCount // e.g. 512Mi → 0.5 (GiB-based or however your model interprets it)
-	RAMReqNew model.CPUCount // e.g. 256Mi → 0.25
+	Cluster   string
+	Namespace string
+	PodName   string
+	PodCount  uint
+	PodType   string
+	Container string
+	CPUReqOld *model.CPUCount // e.g. 100m → 0.1
+	CPUReqNew *model.CPUCount // e.g. 50m  → 0.05
+	RAMReqOld *model.CPUCount // e.g. 512Mi → 0.5 (GiB-based or however your model interprets it)
+	RAMReqNew *model.CPUCount // e.g. 256Mi → 0.25
+	CPULimOld *model.CPUCount // e.g. 100m → 0.1
+	CPULimNew *model.CPUCount // e.g. 50m  → 0.05
+	RAMLimOld *model.CPUCount // e.g. 512Mi → 0.5 (GiB-based or however your model interprets it)
+	RAMLimNew *model.CPUCount // e.g. 256Mi → 0.25
 }
 
 // CalculatePrice iterates over each container’s old vs. new requests,

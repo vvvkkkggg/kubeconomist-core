@@ -6,7 +6,6 @@ import (
 
 const (
 	labelResourceType      = "resource_type"
-	labelParameterType     = "parameter_type"
 	labelConsumptionType   = "consumption_type"
 	labelConsumptionStatus = "consumption_status"
 )
@@ -14,16 +13,12 @@ const (
 type (
 	Resource                   string
 	ConsumptionMeasurementUnit string
-	ParameterType              string
 	ConsumptionStatus          string
 )
 
 const (
 	ResourceCPU Resource = "cpu"
 	ResourceRAM Resource = "ram"
-
-	ParameterTypeRequest ParameterType = "requests"
-	ParameterTypeLimit   ParameterType = "limits"
 
 	ConsumptionMoney ConsumptionMeasurementUnit = "rub"
 	ConsumptionReal  ConsumptionMeasurementUnit = "real"
@@ -48,7 +43,7 @@ func New(
 				Name:      "resource_consumption",
 				Help:      "A histogram of resource consumption by k8s cluster",
 			},
-			[]string{labelResourceType, labelParameterType, labelConsumptionType, labelConsumptionStatus},
+			[]string{labelResourceType, labelConsumptionType, labelConsumptionStatus},
 		),
 	}, nil
 }
@@ -66,12 +61,11 @@ func (c *Collector) Collect(ch chan<- prometheus.Metric) {
 
 func (c *Collector) AddResourceConsumption(
 	resource Resource,
-	parameterType ParameterType,
 	unit ConsumptionMeasurementUnit,
 	status ConsumptionStatus,
 	amount float64,
 ) {
 	c.resourceHistogram.
-		WithLabelValues(string(resource), string(parameterType), string(unit), string(status)).
+		WithLabelValues(string(resource), string(unit), string(status)).
 		Observe(amount)
 }

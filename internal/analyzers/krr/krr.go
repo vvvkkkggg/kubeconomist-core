@@ -55,25 +55,52 @@ type ResourceOptimization struct {
 // CalculatePrice iterates over each container’s old vs. new requests,
 // asks Billing for their ruble cost, and accumulates totals.
 // Returns (currentTotal, optimizedTotal, gain).
-func (k *KrrAnalyzer) CalculatePrice(rows []ResourceOptimization) (
-	currentTotal model.PriceRUB,
-	optimizedTotal model.PriceRUB,
-	gain model.PriceRUB,
-) {
+func (k *KrrAnalyzer) CalculatePrice(rows []krrOutput) {
 	for _, r := range rows {
-		// cost with “old” requests:
-		curr := k.billing.GetPriceRUB(r.CPUReqOld, r.RAMReqOld)
+		sendMetrics := func(prev, new float64, resource Resource, unit ConsumptionMeasurementUnit) {
+			k.collector.AddResourceConsumption(
+				resource, unit, ConsumptionStatusGain,
+				prev-new,
+			)
 
-		// cost with “new” (optimized) requests:
-		opt := k.billing.GetPriceRUB(r.CPUReqNew, r.RAMReqNew)
+			k.collector.AddResourceConsumption(
+				resource, unit, ConsumptionStatusCurrent,
+				prev,
+			)
 
-		currentTotal += curr
-		optimizedTotal += opt
+			k.collector.AddResourceConsumption(
+				resource, unit, ConsumptionStatusRecommended,
+				new,
+			)
+		}
 
-		k.collector.AddResourceConsumption()
+		if r.Object.Requests.CPU != nil && *r.Object.Requests.CPU > *r.Recommended.Requests.CPU {
+			sendMetrics(
+				*r.Object.Requests.CPU, *r.Recommended.Requests.CPU,
+				ResourceCPU,
+				ConsumptionReal,
+			)
+
+			sendMetrics(
+				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory,
+				ResourceRAM,
+				ConsumptionReal,
+			)
+
+			sendMetrics(
+				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory, // todo: add money multiplier
+				ResourceRAM,
+				ConsumptionMoney,
+			)
+
+			sendMetrics(
+				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory, // todo: add money multiplier
+				ResourceRAM,
+				ConsumptionMoney,
+			)
+		}
 	}
 
-	gain = currentTotal - optimizedTotal
 	return
 }
 

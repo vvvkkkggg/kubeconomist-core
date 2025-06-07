@@ -1,6 +1,6 @@
 metrics_port: 6001
 analyzers:
   krr:
-    prometheus_url:
-    prometheus_auth_header:
-    history_duration:
+    prometheus_url: "https://monitoring.api.cloud.yandex.net/prometheus/workspaces/monjnbprk79m451udi83"
+    prometheus_auth_header: "Bearer AQVN2t0W3J0xEoc0cVe0iieK5VcDSWrPZRIIZwI5"
+    history_duration: "1"

@@ -8,6 +8,7 @@ import (
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krr"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
 )
 
 func Run() error {
@@ -33,6 +34,14 @@ func Run() error {
 
 	for _, a := range analyzerList {
 		go a.Run(ctx)
+	}
+
+	if err := metrics.ListenAndServe(
+		ctx,
+		cfg.Metrics,
+		collectors...,
+	); err != nil {
+		return err
 	}
 
 	return nil

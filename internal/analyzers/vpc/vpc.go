@@ -1,10 +1,9 @@
-package analyzers
+package vpc
 
 import (
 	"context"
-	"log"
-	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/vpc/v1"
@@ -17,51 +16,100 @@ const (
 var _ analyzers.Analyzer = &VPCAnalyzer{}
 
 type VPCAnalyzer struct {
+	yandex *yandex.Client
 }
 
-func NewVPCAnalyzer() *VPCAnalyzer {
-	panic("implement me")
+type Address struct {
+	CloudID    string
+	FolderID   string
+	IP         string
+	IsUsed     bool
+	IsReserved bool
 }
 
-func (v *VPCAnalyzer) Run(ctx context.Context) {
-	yandex, err := yandex.New(ctx, os.Getenv("YANDEX_TOKEN"))
+func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
+	return &VPCAnalyzer{
+		yandex: ya,
+	}
+}
+
+func (v *VPCAnalyzer) Describe(ch chan<- *prometheus.Desc) {
+	ch <- prometheus.NewDesc("kubeconomist_vpc_ip_status", "Status of IPs", []string{"ip_address"}, nil)
+}
+
+func (v *VPCAnalyzer) Collect(ch chan<- prometheus.Metric) {
+	addrs, err := v.GetAddresses(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to create Yandex client: %v", err)
+		return
 	}
 
-	clouds, err := yandex.GetClouds(ctx)
+	for _, addr := range addrs {
+		if !addr.IsReserved {
+			continue
+		}
+
+		isUsed := 0.0
+		if addr.IsUsed {
+			isUsed = 1.0
+		}
+
+		desc := prometheus.NewDesc("kubeconomist_vpc_ip_status", "Status of IPs", []string{"ip_address"}, nil)
+		ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, isUsed, addr.IP)
+	}
+}
+
+// func (v *VPCAnalyzer) GetMetric() *prometheus.GaugeVec {
+// 	return prometheus.NewGaugeVec(
+// 		prometheus.GaugeOpts{
+// 			Namespace: "kubeconomist",
+// 			Subsystem: "vpc",
+// 			Name:      "ip_status",
+// 			Help:      "Status of IP addresses in VPC",
+// 		},
+// 		[]string{"ip_address"},
+// 	)
+// }
+
+func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
+	clouds, err := v.yandex.GetClouds(ctx)
 	if err != nil {
-		log.Fatalf("Failed to get clouds: %v", err)
+		return nil, err
 	}
 
-	unsedIPs := make([]*vpc.Address, 0)
+	addrs := make([]Address, 0)
 	for _, cloud := range clouds {
-		folders, err := yandex.GetFolders(ctx, cloud.Id)
+		folders, err := v.yandex.GetFolders(ctx, cloud.Id)
 		if err != nil {
-			log.Fatalf("Failed to get folders for cloud %s: %v", cloud.Id, err)
+			return nil, err
 		}
 
 		for _, folder := range folders {
-			addresses, err := yandex.GetAddresses(ctx, folder.Id)
+			as, err := v.yandex.GetAddresses(ctx, folder.Id)
 			if err != nil {
-				log.Fatalf("Failed to get addresses for folder %s: %v", folder.Id, err)
+				return nil, err
 			}
 
-			for _, address := range addresses {
-				if address.GetIpVersion() != vpc.Address_IPV4 {
+			for _, a := range as {
+				if a.GetIpVersion() != vpc.Address_IPV4 {
 					continue
 				}
 
-				if address.GetUsed() {
-					continue
-				}
-
-				if !address.GetReserved() {
-					continue
-				}
-
-				unsedIPs = append(unsedIPs, address)
+				addrs = append(addrs, Address{
+					CloudID:    cloud.Id,
+					FolderID:   folder.Id,
+					IP:         a.GetExternalIpv4Address().GetAddress(),
+					IsUsed:     a.GetUsed(),
+					IsReserved: a.GetReserved(),
+				})
 			}
 		}
 	}
+
+	return addrs, nil
+}
+
+func (v *VPCAnalyzer) Run(ctx context.Context) {}
+
+func (v *VPCAnalyzer) GetCollectors() *prometheus.Collector {
+	return nil
 }

@@ -1,4 +1,4 @@
-package analyzers
+package krr
 
 import (
 	"context"
@@ -11,11 +11,11 @@ import (
 var _ analyzers.Analyzer = &KrrAnalyzer{}
 
 type KrrAnalyzer struct {
-	billing   Billing
+	billing   analyzers.Billing
 	collector *Collector
 }
 
-func NewKrrAnalyzer(b Billing, collector *Collector) *KrrAnalyzer {
+func NewKrrAnalyzer(b analyzers.Billing, collector *Collector) *KrrAnalyzer {
 	return &KrrAnalyzer{billing: b, collector: collector}
 }
 
@@ -47,6 +47,8 @@ func (k *KrrAnalyzer) CalculatePrice(rows []ResourceOptimization) (
 
 		currentTotal += curr
 		optimizedTotal += opt
+
+		k.collector.AddResourceConsumption()
 	}
 
 	gain = currentTotal - optimizedTotal

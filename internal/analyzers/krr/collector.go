@@ -1,4 +1,4 @@
-package analyzers
+package krr
 
 import (
 	"github.com/prometheus/client_golang/prometheus"

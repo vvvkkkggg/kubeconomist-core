@@ -24,15 +24,36 @@ type Biling interface {
 }
 
 type RegistryOptimizer struct {
-	billing Biling
+	billing   Biling
+	clientset *kubernetes.Clientset
+	yandex    *yandex.Client
 
 	resourceGauge *prometheus.GaugeVec
 }
 
 func NewRegistryOptimizer(billing Biling) *RegistryOptimizer {
+	ctx := context.Background()
+
+	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	yandex, err := yandex.New(ctx, os.Getenv("YANDEX_TOKEN"))
+	if err != nil {
+		panic(err.Error())
+	}
 
 	return &RegistryOptimizer{
-		billing: billing,
+		billing:   billing,
+		clientset: clientset,
+		yandex:    yandex,
 
 		resourceGauge: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
@@ -111,35 +132,19 @@ func getK8SImages(clientset *kubernetes.Clientset) ([]string, error) {
 }
 
 func (ro *RegistryOptimizer) Run(ctx context.Context) {
-	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	ycImages, err := getYandexImages(ctx, ro.yandex)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	k8sImages, err := getK8SImages(ro.clientset)
 	if err != nil {
 		panic(err.Error())
-	}
-
-	yandex, err := yandex.New(ctx, os.Getenv("YANDEX_TOKEN"))
-	if err != nil {
-		log.Fatalf("Failed to create Yandex client: %v", err)
-	}
-
-	ycImages, err := getYandexImages(ctx, yandex)
-	if err != nil {
-
-	}
-
-	k8sImages, err := getK8SImages(clientset)
-	if err != nil {
-
 	}
 
 	registryCost, err := ro.billing.GetRegistryCost()
 	if err != nil {
-
+		panic(err.Error())
 	}
 
 	inUse := func(ycName string) bool {

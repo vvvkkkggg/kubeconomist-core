@@ -1,13 +1,18 @@
 version: '3.8'
 
 services:
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
+      - victoria-metrics-data:/victoria-metrics-data
+    command:
+      - '--promscrape.config=/etc/prometheus/prometheus.yml'
+      - '--storageDataPath=/victoria-metrics-data'
+      - '--retentionPeriod=100d'
     networks:
       - monitoring
 
@@ -19,14 +24,23 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_DATASOURCES_NAME=VictoriaMetrics
+      - GF_DATASOURCES_TYPE=prometheus
+      - GF_DATASOURCES_URL=http://victoria-metrics:8428
+      - GF_DATASOURCES_ACCESS=proxy
+      - GF_DATASOURCES_IS_DEFAULT=true
     ports:
       - "3000:3000"
     depends_on:
-      - prometheus
-    volumes:
-      - ./datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - victoria-metrics
     networks:
       - monitoring
+    volumes:
+      - grafana-data:/var/lib/grafana
 
 networks:
   monitoring:
+
+volumes:
+  victoria-metrics-data:
+  grafana-data: 

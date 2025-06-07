@@ -1,23 +1,27 @@
-package nodeoptimizer
+package platformoptimizer
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 )
 
-type NodeOptimizer struct {
+var _ analyzers.Analyzer = &PlatformOptimizer{}
+
+type PlatformOptimizer struct {
 	yandex  *yandex.Client
 	billing *billing.Billing
 
 	metric *prometheus.GaugeVec
 }
 
-func NewNodeOptimizer(ya *yandex.Client, b *billing.Billing) *NodeOptimizer {
+func NewPlatformOptimizer(ya *yandex.Client, b *billing.Billing) *PlatformOptimizer {
 	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
@@ -28,16 +32,20 @@ func NewNodeOptimizer(ya *yandex.Client, b *billing.Billing) *NodeOptimizer {
 		[]string{"cloud_id", "folder_id", "node_group_id", "platform_id", "status"},
 	)
 
-	return &NodeOptimizer{
+	return &PlatformOptimizer{
 		yandex:  ya,
 		billing: b,
 		metric:  m,
 	}
 }
 
-// TODO: Return metric to expose via Prometheus
+func (n *PlatformOptimizer) GetCollectors() []prometheus.Collector {
+	return []prometheus.Collector{
+		n.metric,
+	}
+}
 
-func (n *NodeOptimizer) calculatePrice(platformID string, coreFraction, cores, memory int64) (float64, error) {
+func (n *PlatformOptimizer) calculatePrice(platformID string, coreFraction, cores, memory int64) (float64, error) {
 	currentPriceCPU, err := n.billing.GetPriceCPURUB(platformID, strconv.Itoa(int(coreFraction)), model.CPUCount(float64(cores)))
 	if err != nil {
 		return 0, err
@@ -51,32 +59,33 @@ func (n *NodeOptimizer) calculatePrice(platformID string, coreFraction, cores, m
 	return float64(currentPriceCPU + currentPriceMemory), nil
 }
 
-func (n *NodeOptimizer) Run(ctx context.Context) error {
+func (n *PlatformOptimizer) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			slog.Error("ctx done", slog.Any("err", ctx.Err()))
+			return
 		default:
 		}
 
 		clouds, err := n.yandex.GetClouds(ctx)
 		if err != nil {
-			// TODO: handle error properly
-			return err
+			slog.Error("get clouds err", slog.Any("err", err))
+			return
 		}
 
 		for _, cloud := range clouds {
 			folders, err := n.yandex.GetFolders(ctx, cloud.Id)
 			if err != nil {
-				// TODO: handle error properly
-				return err
+				slog.Error("get folders err", slog.Any("err", err))
+				return
 			}
 
 			for _, folder := range folders {
 				nodeGroups, err := n.yandex.GetNodeGroups(ctx, folder.Id)
 				if err != nil {
-					// TODO: handle error properly
-					return err
+					slog.Error("get node groups err", slog.Any("err", err))
+					return
 				}
 
 				for _, nodeGroup := range nodeGroups {
@@ -87,8 +96,8 @@ func (n *NodeOptimizer) Run(ctx context.Context) error {
 
 					currentPrice, err := n.calculatePrice(platformID, coreFraction, cores, memory)
 					if err != nil {
-						// TODO: handle error properly
-						return err
+						slog.Error("calculate price err", slog.Any("err", err))
+						return
 					}
 
 					cheapestPrice := currentPrice
@@ -99,10 +108,12 @@ func (n *NodeOptimizer) Run(ctx context.Context) error {
 							continue
 						}
 
+						panic(platformID)
+
 						price, err := n.calculatePrice(p, coreFraction, cores, memory)
 						if err != nil {
-							// TODO: handle error properly
-							return err
+							slog.Error("calculate price err", slog.Any("err", err))
+							return
 						}
 
 						if price < currentPrice {

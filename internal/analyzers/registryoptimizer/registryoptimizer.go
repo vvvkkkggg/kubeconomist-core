@@ -3,7 +3,6 @@ package registryoptimizer
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +32,7 @@ type RegistryOptimizer struct {
 	resourceGauge *prometheus.GaugeVec
 }
 
-func NewRegistryOptimizer(billing Biling, cfg config.Config) *RegistryOptimizer {
+func NewRegistryOptimizer(billing Biling, cfg *config.Config) *RegistryOptimizer {
 	ctx := context.Background()
 
 	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
@@ -70,20 +69,20 @@ func NewRegistryOptimizer(billing Biling, cfg config.Config) *RegistryOptimizer 
 func getYandexImages(ctx context.Context, yandex *yandex.Client) (map[string]*compute.Image, error) {
 	clouds, err := yandex.GetClouds(ctx)
 	if err != nil {
-		log.Fatalf("Failed to get clouds: %v", err)
+		return nil, fmt.Errorf("failed to get clouds: %w", err)
 	}
 
 	ycImages := make(map[string]*compute.Image, 0)
 	for _, cloud := range clouds {
 		folders, err := yandex.GetFolders(ctx, cloud.Id)
 		if err != nil {
-			log.Fatalf("Failed to get folders for cloud %s: %v", cloud.Id, err)
+			return nil, fmt.Errorf("failed to get folders for cloud %s: %w", cloud.Id, err)
 		}
 
 		for _, folder := range folders {
 			images, err := yandex.GetImages(ctx, folder.Id)
 			if err != nil {
-				log.Fatalf("Failed to get addresses for folder %s: %v", folder.Id, err)
+				return nil, fmt.Errorf("failed to get addresses for folder %s: %w", folder.Id, err)
 			}
 
 			for _, image := range images.Images {
@@ -92,7 +91,7 @@ func getYandexImages(ctx context.Context, yandex *yandex.Client) (map[string]*co
 		}
 	}
 
-	return ycImages, err
+	return ycImages, nil
 }
 
 func getK8SImages(ctx context.Context, clientset *kubernetes.Clientset) ([]string, error) {

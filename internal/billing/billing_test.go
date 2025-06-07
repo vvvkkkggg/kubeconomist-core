@@ -229,3 +229,73 @@ func TestGetPriceCPURUB_NotFound(t *testing.T) {
 		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}
 }
+
+func TestGenRAMNameForGrep_StandardV1(t *testing.T) {
+	platform := "standard-v1"
+	expected := "Intel Broadwell. RAM"
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For platform '%s' expected '%s', got '%s'", platform, expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_StandardV2(t *testing.T) {
+	platform := "standard-v2"
+	expected := "Intel Cascade Lake. RAM"
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For platform '%s' expected '%s', got '%s'", platform, expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_StandardV3(t *testing.T) {
+	platform := "standard-v3"
+	expected := "Intel Ice Lake. RAM"
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For platform '%s' expected '%s', got '%s'", platform, expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_HighFreqV3(t *testing.T) {
+	platform := "highfreq-v3"
+	expected := "Intel Ice Lake (Compute-Optimized). RAM"
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For platform '%s' expected '%s', got '%s'", platform, expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_AMDv1(t *testing.T) {
+	platform := "amd-v1"
+	expected := "AMD Zen 3. RAM"
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For platform '%s' expected '%s', got '%s'", platform, expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_UnknownPlatform(t *testing.T) {
+	platform := "unknown-platform"
+	expected := ". RAM" // platformMatcher возвращает пустую строку для неизвестных платформ
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For unknown platform expected '%s', got '%s'", expected, result)
+	}
+}
+
+func TestGenRAMNameForGrep_EmptyPlatform(t *testing.T) {
+	platform := ""
+	expected := ". RAM" // platformMatcher возвращает пустую строку для пустого ввода
+	result := genRAMNameForGrep(platform)
+
+	if result != expected {
+		t.Errorf("For empty platform expected '%s', got '%s'", expected, result)
+	}
+}

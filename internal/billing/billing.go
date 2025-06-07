@@ -224,7 +224,47 @@ func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount 
 	return model.PriceRUB(res * float64(cpuCount)), nil
 }
 
-func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) (model.PriceRUB, error) {
+func genRAMNameForGrep(platform string) string {
+	cpu := platformMatcher(platform)
 
-	return 0, nil
+	return fmt.Sprintf("%s. RAM", cpu)
+}
+
+func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) (model.PriceRUB, error) {
+	name := genRAMNameForGrep(platform)
+
+	var foundedRAM SKU
+
+	b.mu.RLock()
+
+	for _, sku := range b.computeCloudPrices {
+		ln := strings.ToLower(sku.Name)
+
+		if ln == strings.ToLower(name) {
+			foundedRAM = sku
+
+			break
+		}
+	}
+
+	b.mu.RUnlock()
+
+	if len(foundedRAM.PricingVersions) != 1 {
+		return 0, fmt.Errorf("unexpected length of pricing versions: %d",
+			len(foundedRAM.PricingVersions))
+	}
+
+	if len(foundedRAM.PricingVersions[0].PricingExpression.Rates) != 1 {
+		return 0, fmt.Errorf("unexpected length of pricing expressions rates: %d",
+			len(foundedRAM.PricingVersions[0].PricingExpression.Rates))
+	}
+
+	price := foundedRAM.PricingVersions[0].PricingExpression.Rates[0].UnitPrice
+
+	res, err := strconv.ParseFloat(price, 32)
+	if err != nil {
+		return 0, errors.New("failed to parse float")
+	}
+
+	return model.PriceRUB(res * float64(ramCount)), nil
 }

@@ -12,7 +12,7 @@ type (
 	}
 
 	MetricsConfig struct {
-		Host string `mapstructure:"host" validate:"required"`
+		Host string `mapstructure:"host"`
 		Port string `mapstructure:"port" validate:"required"`
 	}
 

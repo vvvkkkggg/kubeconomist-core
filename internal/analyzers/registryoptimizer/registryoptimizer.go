@@ -131,6 +131,40 @@ func getK8SImages(clientset *kubernetes.Clientset) ([]string, error) {
 	return images, nil
 }
 
+func computeCost(ycImages map[string]*compute.Image, k8sImages []string, registryCost float64) float64 {
+	inUse := func(ycName string) bool {
+		for _, imageName := range k8sImages {
+			// MAY BE NOT GOOD BUT IDK
+			if strings.Contains(imageName, ycName) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	imagesToDelete := make([]string, 0, len(ycImages))
+
+	// если есть в Yandex Cloud, но нет в кубе
+	for name := range ycImages {
+		if !inUse(name) {
+			imagesToDelete = append(imagesToDelete, name)
+		}
+	}
+
+	sumGB := 0.0
+
+	for _, name := range imagesToDelete {
+		if image, exists := ycImages[name]; exists {
+			sizeGB := float64(image.StorageSize) / (1024 * 1024 * 1024)
+			sumGB += sizeGB
+		}
+	}
+
+	// сколько сэкономим в час
+	return sumGB * registryCost
+}
+
 func (ro *RegistryOptimizer) Run(ctx context.Context) {
 	ycImages, err := getYandexImages(ctx, ro.yandex)
 	if err != nil {
@@ -147,36 +181,7 @@ func (ro *RegistryOptimizer) Run(ctx context.Context) {
 		panic(err.Error())
 	}
 
-	inUse := func(ycName string) bool {
-		for _, imageName := range k8sImages {
-			if strings.Contains(imageName, ycName) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	imagesToDelete := make([]string, 0, len(ycImages))
-
-	// если есть в Yandex Cloud, но нет в кубе
-	for name := range ycImages {
-		if inUse(name) {
-			imagesToDelete = append(imagesToDelete, name)
-		}
-	}
-
-	sumGB := 0.0
-
-	for _, name := range imagesToDelete {
-		if image, exists := ycImages[name]; exists {
-			sizeGB := float64(image.StorageSize) / (1024 * 1024 * 1024)
-			sumGB += sizeGB
-		}
-	}
-
-	// сколько сэкономим в час
-	totalCost := sumGB * registryCost
+	totalCost := computeCost(ycImages, k8sImages, registryCost)
 
 	ro.resourceGauge.WithLabelValues().Set(totalCost)
 }

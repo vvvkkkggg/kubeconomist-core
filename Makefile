@@ -11,3 +11,9 @@ check-brew:
 		echo "Visit https://brew.sh for installation instructions."; \
 		exit 1; \
 	fi
+
+env-up:
+	docker compose -f ./test/docker-compose.yml up
+
+env-down:
+	docker compose -f test/docker-compose.yml down

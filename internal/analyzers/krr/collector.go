@@ -29,17 +29,15 @@ const (
 )
 
 type Collector struct {
-	resourceHistogram *prometheus.HistogramVec
+	resourceGauge *prometheus.GaugeVec
 }
 
-func New(
-	namespace, serviceName string,
-) (*Collector, error) {
+func NewCollector(analyzerName string) (*Collector, error) {
 	return &Collector{
-		resourceHistogram: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Namespace: namespace,
-				Subsystem: serviceName,
+		resourceGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: "kubeconomist",
+				Subsystem: analyzerName,
 				Name:      "resource_consumption",
 				Help:      "A histogram of resource consumption by k8s cluster",
 			},
@@ -51,12 +49,12 @@ func New(
 // Describe sends the super-set of all possible descriptors of metrics
 // collected by this Collector to the provided channel.
 func (c *Collector) Describe(ch chan<- *prometheus.Desc) {
-	c.resourceHistogram.Describe(ch)
+	c.resourceGauge.Describe(ch)
 }
 
 // Collect is called by the Prometheus registry when collecting metrics.
 func (c *Collector) Collect(ch chan<- prometheus.Metric) {
-	c.resourceHistogram.Collect(ch)
+	c.resourceGauge.Collect(ch)
 }
 
 func (c *Collector) AddResourceConsumption(
@@ -65,7 +63,6 @@ func (c *Collector) AddResourceConsumption(
 	status ConsumptionStatus,
 	amount float64,
 ) {
-	c.resourceHistogram.
-		WithLabelValues(string(resource), string(unit), string(status)).
-		Observe(amount)
+	c.resourceGauge.
+		WithLabelValues(string(resource), string(unit), string(status)).Set(amount)
 }

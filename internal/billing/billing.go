@@ -7,21 +7,30 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
+
+	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
 const (
-	baseURL = "https://yandex.cloud/api/priceList/getPriceList"
+	baseURL             = "https://yandex.cloud/api/priceList/getPriceList"
+	kubernetesServiceID = "dn2af04ph5otc5f23o1h"
+	computeCloud        = "dn22pas77ftg9h3f2djj"
 )
 
 // Billing структура для работы с API биллинга Yandex Cloud
 type Billing struct {
 	client  *http.Client
 	baseURL string
+
+	computeCloudPrices []SKU
+
+	mu sync.RWMutex
 }
 
 func New() *Billing {
-	return &Billing{
+	b := &Billing{
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 			Transport: &http.Transport{
@@ -34,6 +43,8 @@ func New() *Billing {
 		},
 		baseURL: baseURL,
 	}
+
+	return b
 }
 
 // PriceResponse структура ответа API
@@ -80,13 +91,13 @@ func (b *Billing) GetPrices(ctx context.Context, serviceID string) ([]SKU, error
 	params.Add("services[]", serviceID)
 	params.Add("from", time.Now().Format("2006-01-02"))
 	params.Add("to", time.Now().Format("2006-01-02"))
-	params.Add("pageSize", "50")
+	//params.Add("pageSize", "50")
 	params.Add("currency", "RUB")
 	params.Add("lang", "ru")
 
 	req, err := http.NewRequestWithContext(
 		ctx,
-		"GET",
+		http.MethodGet,
 		fmt.Sprintf("%s?%s", b.baseURL, params.Encode()),
 		nil,
 	)
@@ -124,10 +135,13 @@ func (b *Billing) GetPrices(ctx context.Context, serviceID string) ([]SKU, error
 	return filteredSKUs, nil
 }
 
+func (b *Billing) UpdatePricesCloudeCompute(ctx context.Context) {
+	b.computeCloudPrices, _ = b.GetPrices(ctx, computeCloud)
+}
+
 // GetPricesForKubernetes получает цены для Kubernetes
-func (b *Billing) GetPricesForKubernetes(ctx context.Context) ([]SKU, error) {
-	const kubernetesServiceID = "dn2af04ph5otc5f23o1h"
-	return b.GetPrices(ctx, kubernetesServiceID)
+func (b *Billing) GetPricesForComputeCloud() []SKU {
+	return b.computeCloudPrices
 }
 
 // GetCurrentPrice возвращает текущую цену для SKU
@@ -147,4 +161,8 @@ func (sku *SKU) GetCurrentPrice() (string, error) {
 // GetEffectiveTime возвращает время вступления цены в силу
 func (pv *PricingVersion) GetEffectiveTime() time.Time {
 	return time.Unix(pv.EffectiveTime/1000, 0)
+}
+
+func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB {
+	return 0
 }

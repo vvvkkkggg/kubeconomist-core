@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 )
@@ -12,13 +11,9 @@ import (
 func Run() {
 	billingClient := billing.New()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	billingClient.UpdatePricesCloudeCompute(context.TODO())
 
-	skus, err := billingClient.GetPricesForKubernetes(ctx)
-	if err != nil {
-		log.Fatalf("Failed to get prices: %v", err)
-	}
+	skus := billingClient.GetPricesForComputeCloud()
 
 	fmt.Printf("Found %d active SKUs for Kubernetes:\n", len(skus))
 	for _, sku := range skus {

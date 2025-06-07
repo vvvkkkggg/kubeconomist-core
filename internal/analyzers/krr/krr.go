@@ -37,7 +37,7 @@ func NewKrrAnalyzer(
 				Name:      "resource_consumption",
 				Help:      "A histogram of resource consumption by k8s cluster",
 			},
-			[]string{labelResourceType, labelConsumptionType, labelConsumptionStatus},
+			[]string{labelPodName, labelCluster, labelResourceType, labelConsumptionType, labelConsumptionStatus},
 		),
 	}
 }
@@ -57,27 +57,33 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 			panic(err)
 		}
 
-		k.CalculatePrice(krrStats)
+		k.calculatePrice(krrStats)
 	}
 }
 
-// CalculatePrice iterates over each container’s old vs. new requests,
+// calculatePrice iterates over each container’s old vs. new requests,
 // asks Billing for their ruble cost, and accumulates totals.
 // Returns (currentTotal, optimizedTotal, gain).
-func (k *KrrAnalyzer) CalculatePrice(rows []KrrOutput) {
+func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 	for _, r := range rows {
 		sendMetrics := func(prev, new float64, resource Resource, unit ConsumptionMeasurementUnit) {
 			k.writeConsumptionToGauge(
+				r.Object.Pods[0].Name,
+				r.Object.Cluster,
 				resource, unit, ConsumptionStatusGain,
 				prev-new,
 			)
 
 			k.writeConsumptionToGauge(
+				r.Object.Pods[0].Name,
+				r.Object.Cluster,
 				resource, unit, ConsumptionStatusCurrent,
 				prev,
 			)
 
 			k.writeConsumptionToGauge(
+				r.Object.Pods[0].Name,
+				r.Object.Cluster,
 				resource, unit, ConsumptionStatusRecommended,
 				new,
 			)

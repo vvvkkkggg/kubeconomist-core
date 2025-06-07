@@ -4,6 +4,8 @@ const (
 	labelResourceType      = "resource_type"
 	labelConsumptionType   = "consumption_type"
 	labelConsumptionStatus = "consumption_status"
+	labelCluster           = "cluster"
+	labelPodName           = "pod_name"
 )
 
 type (
@@ -25,11 +27,13 @@ const (
 )
 
 func (k *KrrAnalyzer) writeConsumptionToGauge(
+	podname string,
+	cluster string,
 	resource Resource,
 	unit ConsumptionMeasurementUnit,
 	status ConsumptionStatus,
 	amount float64,
 ) {
 	k.resourceGauge.
-		WithLabelValues(string(resource), string(unit), string(status)).Set(amount)
+		WithLabelValues(podname, cluster, string(resource), string(unit), string(status)).Set(amount)
 }

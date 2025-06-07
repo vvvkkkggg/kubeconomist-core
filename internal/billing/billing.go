@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -163,6 +165,47 @@ func (pv *PricingVersion) GetEffectiveTime() time.Time {
 	return time.Unix(pv.EffectiveTime/1000, 0)
 }
 
+func platformMatcher(platform string) string {
+	m := map[string]string{
+		"standard-v1": "Intel Broadwell",
+		"standard-v2": "Intel Cascade Lake",
+		"standard-v3": "Intel Ice Lake",
+
+		"highfreq-v3": "Intel Ice Lake (Compute-Optimized)",
+		"amd-v1":      "AMD Zen 3",
+	}
+
+	return m[platform]
+}
+
+func genCPUNameForGrep(platform, coreFraction string) string {
+	cpu := platformMatcher(platform)
+
+	return fmt.Sprintf("%s. %s", cpu, coreFraction) + "%" + " vCPU"
+}
+
 func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB {
-	return 0
+	name := genCPUNameForGrep(platform, coreFraction)
+
+	var foundedCPU SKU
+
+	b.mu.RLock()
+
+	for _, sku := range b.computeCloudPrices {
+		ln := strings.ToLower(sku.Name)
+
+		if strings.Contains(ln, strings.ToLower(name)) {
+			foundedCPU = sku
+
+			break
+		}
+	}
+
+	b.mu.RUnlock()
+
+	price := foundedCPU.PricingVersions[0].PricingExpression.Rates[0].UnitPrice
+
+	res, _ := strconv.ParseFloat(price, 32)
+
+	return model.PriceRUB(res)
 }

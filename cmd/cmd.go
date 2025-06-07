@@ -7,6 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krr"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/platformoptimizer"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
@@ -41,7 +42,7 @@ func Run() error {
 
 	// FIXME: ВОТ ТУТ ОТКЛЮЧАТЬ АНАЛАЙЗЕРЫ ДЛЯ ДЕБАГА
 	analyzerList := []analyzers.Analyzer{
-		//krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
+		krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
 		//vpc.NewVPCAnalyzer(yandexClient),
 		platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
 		//registryoptimizer.NewRegistryOptimizer(billing),

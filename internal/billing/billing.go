@@ -18,6 +18,8 @@ import (
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
+var ErrFlavourNotFound = errors.New("flavour not found")
+
 const (
 	baseURL             = "https://yandex.cloud/api/priceList/getPriceList"
 	kubernetesServiceID = "dn2af04ph5otc5f23o1h"
@@ -224,14 +226,22 @@ func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount 
 
 	b.mu.RLock()
 
+	found := false
+
 	for _, sku := range b.computeCloudPrices {
 		ln := strings.ToLower(sku.Name)
 
 		if strings.Contains(ln, strings.ToLower(name)) {
 			foundedCPU = sku
 
+			found = true
+
 			break
 		}
+	}
+
+	if !found {
+		return 0, ErrFlavourNotFound
 	}
 
 	b.mu.RUnlock()

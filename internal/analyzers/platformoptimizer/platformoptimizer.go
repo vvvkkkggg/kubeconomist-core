@@ -2,6 +2,7 @@ package platformoptimizer
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strconv"
 
@@ -108,10 +109,11 @@ func (n *PlatformOptimizer) Run(ctx context.Context) {
 							continue
 						}
 
-						panic(platformID)
-
 						price, err := n.calculatePrice(p, coreFraction, cores, memory)
 						if err != nil {
+							if errors.Is(err, billing.ErrFlavourNotFound) {
+								continue
+							}
 							slog.Error("calculate price err", slog.Any("err", err))
 							return
 						}

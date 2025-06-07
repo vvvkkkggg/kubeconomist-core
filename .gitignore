@@ -17,7 +17,8 @@ coverage.*
 *.coverprofile
 profile.cov
 
-config/
+./config/
+./config/*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/

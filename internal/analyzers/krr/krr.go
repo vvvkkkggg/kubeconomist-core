@@ -1,8 +1,12 @@
 package analyzers
 
-import "context"
+import (
+	"context"
 
-var _ Analyzer = &KrrAnalyzer{}
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
+)
+
+var _ analyzers.Analyzer = &KrrAnalyzer{}
 
 type KrrAnalyzer struct {
 }

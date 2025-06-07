@@ -42,7 +42,20 @@ func NewKrrAnalyzer(
 }
 
 func (k *KrrAnalyzer) Run(ctx context.Context) {
-	panic("implement me")
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		krrStats, err := k.callKRR()
+		if err != nil {
+			panic(err)
+		}
+
+		k.CalculatePrice(krrStats)
+	}
 }
 
 type ResourceOptimization struct {
@@ -120,7 +133,7 @@ func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {
 	return []prometheus.Collector{k.resourceGauge}
 }
 
-func (k *KrrAnalyzer) callKRR() (krrOutput, error) {
+func (k *KrrAnalyzer) callKRR() ([]krrOutput, error) {
 	cmd := exec.Command(
 		"krr", "simple",
 		"-p", k.cfg.PrometheusURL,
@@ -133,14 +146,14 @@ func (k *KrrAnalyzer) callKRR() (krrOutput, error) {
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return krrOutput{}, err
+		return nil, err
 	}
 
 	resultJSON := stdout.Bytes()
 
-	var krrResult krrOutput
+	var krrResult []krrOutput
 	if err := json.Unmarshal(resultJSON, &krrResult); err != nil {
-		return krrOutput{}, err
+		return nil, err
 	}
 
 	return krrResult, nil

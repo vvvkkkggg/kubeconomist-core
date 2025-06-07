@@ -1,7 +1,10 @@
 package krr
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"os/exec"
 
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 
@@ -63,4 +66,25 @@ func (k *KrrAnalyzer) CalculatePrice(rows []ResourceOptimization) (
 
 	gain = currentTotal - optimizedTotal
 	return
+}
+
+func (k *KrrAnalyzer) callKRR() (krrOutput, error) {
+	cmd := exec.Command("krr", "simple", "-f", "json")
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return krrOutput{}, err
+	}
+
+	resultJSON := stdout.Bytes()
+
+	var krrResult krrOutput
+	if err := json.Unmarshal(resultJSON, &krrResult); err != nil {
+		return krrOutput{}, err
+	}
+
+	return krrResult, nil
 }

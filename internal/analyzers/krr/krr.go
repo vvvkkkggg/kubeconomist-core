@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
 var _ analyzers.Analyzer = &KrrAnalyzer{}
@@ -58,27 +57,10 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 	}
 }
 
-type ResourceOptimization struct {
-	Cluster   string
-	Namespace string
-	PodName   string
-	PodCount  uint
-	PodType   string
-	Container string
-	CPUReqOld *model.CPUCount // e.g. 100m → 0.1
-	CPUReqNew *model.CPUCount // e.g. 50m  → 0.05
-	RAMReqOld *model.CPUCount // e.g. 512Mi → 0.5 (GiB-based or however your model interprets it)
-	RAMReqNew *model.CPUCount // e.g. 256Mi → 0.25
-	CPULimOld *model.CPUCount // e.g. 100m → 0.1
-	CPULimNew *model.CPUCount // e.g. 50m  → 0.05
-	RAMLimOld *model.CPUCount // e.g. 512Mi → 0.5 (GiB-based or however your model interprets it)
-	RAMLimNew *model.CPUCount // e.g. 256Mi → 0.25
-}
-
 // CalculatePrice iterates over each container’s old vs. new requests,
 // asks Billing for their ruble cost, and accumulates totals.
 // Returns (currentTotal, optimizedTotal, gain).
-func (k *KrrAnalyzer) CalculatePrice(rows []krrOutput) {
+func (k *KrrAnalyzer) CalculatePrice(rows []KrrOutput) {
 	for _, r := range rows {
 		sendMetrics := func(prev, new float64, resource Resource, unit ConsumptionMeasurementUnit) {
 			k.writeConsumptionToGauge(
@@ -133,7 +115,7 @@ func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {
 	return []prometheus.Collector{k.resourceGauge}
 }
 
-func (k *KrrAnalyzer) callKRR() ([]krrOutput, error) {
+func (k *KrrAnalyzer) callKRR() ([]KrrOutput, error) {
 	cmd := exec.Command(
 		"krr", "simple",
 		"-p", k.cfg.PrometheusURL,
@@ -151,7 +133,7 @@ func (k *KrrAnalyzer) callKRR() ([]krrOutput, error) {
 
 	resultJSON := stdout.Bytes()
 
-	var krrResult []krrOutput
+	var krrResult []KrrOutput
 	if err := json.Unmarshal(resultJSON, &krrResult); err != nil {
 		return nil, err
 	}

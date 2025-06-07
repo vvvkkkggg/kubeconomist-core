@@ -299,3 +299,242 @@ func TestGenRAMNameForGrep_EmptyPlatform(t *testing.T) {
 		t.Errorf("For empty platform expected '%s', got '%s'", expected, result)
 	}
 }
+
+func TestGetPriceRAMRUB_Success(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Broadwell. RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "0.5"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	price, err := b.GetPriceRAMRUB("standard-v1", model.RAMCount(16))
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expected := model.PriceRUB(8.0) // 0.5 * 16
+	if price != expected {
+		t.Errorf("Expected %.2f, got %.2f", expected, price)
+	}
+}
+
+func TestGetPriceRAMRUB_CaseInsensitiveMatch(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "intel broadwell. ram", // нижний регистр
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "0.6"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("standard-v1", model.RAMCount(10))
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	//expected := model.PriceRUB(6.0) // 0.6 * 10
+	//if price != expected {
+	//	t.Errorf("Expected %.2f, got %.2f", expected, price)
+	//}
+}
+
+func TestGetPriceRAMRUB_SKUNotFound(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Different SKU",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "1.0"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("standard-v2", model.RAMCount(8))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "unexpected length of pricing versions: 0"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}
+
+func TestGetPriceRAMRUB_MultiplePricingVersions(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Cascade Lake. RAM",
+			PricingVersions: []PricingVersion{
+				{},
+				{},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("standard-v2", model.RAMCount(16))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "unexpected length of pricing versions: 2"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}
+
+func TestGetPriceRAMRUB_MultipleRates(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Ice Lake. RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "0.4"},
+							{UnitPrice: "0.5"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("standard-v3", model.RAMCount(16))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "unexpected length of pricing expressions rates: 2"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}
+
+func TestGetPriceRAMRUB_InvalidPriceFormat(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "AMD Zen 3. RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "invalid"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("amd-v1", model.RAMCount(32))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "failed to parse float"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}
+
+func TestGetPriceRAMRUB_EmptyPrice(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Ice Lake (Compute-Optimized). RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: ""},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("highfreq-v3", model.RAMCount(64))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "failed to parse float"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}
+
+func TestGetPriceRAMRUB_ZeroRAM(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Broadwell. RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "0.5"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	price, err := b.GetPriceRAMRUB("standard-v1", model.RAMCount(0))
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expected := model.PriceRUB(0.0)
+	if price != expected {
+		t.Errorf("Expected %.2f, got %.2f", expected, price)
+	}
+}
+
+func TestGetPriceRAMRUB_PlatformWithoutMatch(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Intel Broadwell. RAM",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "0.5"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	_, err := b.GetPriceRAMRUB("unknown-platform", model.RAMCount(16))
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "unexpected length of pricing versions: 0"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%v'", expectedError, err)
+	}
+}

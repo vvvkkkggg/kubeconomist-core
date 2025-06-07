@@ -19,9 +19,28 @@ import (
 
 var _ analyzers.Analyzer = &RegistryOptimizer{}
 
+type Biling interface {
+	GetRegistryCost() (float64, error)
+}
+
 type RegistryOptimizer struct {
-	Biling interface {
-		GetRegistryCost() (float64, error)
+	billing Biling
+
+	resourceGauge *prometheus.GaugeVec
+}
+
+func NewRegistryOptimizer(billing Biling) *RegistryOptimizer {
+
+	return &RegistryOptimizer{
+		billing: billing,
+
+		resourceGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "ycr_registry_storage_cost_per_hour",
+				Help: "Current hourly storage cost for registry images in RUB",
+			},
+			[]string{},
+		),
 	}
 }
 
@@ -56,33 +75,39 @@ func getYandexImages(ctx context.Context, yandex *yandex.Client) (map[string]*co
 func getK8SImages(clientset *kubernetes.Clientset) ([]string, error) {
 	namespaces, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		panic(err.Error())
+		return nil, fmt.Errorf("failed to get namespaces: %w", err)
 	}
 
-	for _, ns := range namespaces.Items {
-		fmt.Printf("Namespace: %s\n", ns.Name)
+	imageSet := make(map[string]struct{})
 
+	for _, ns := range namespaces.Items {
 		pods, err := clientset.CoreV1().Pods(ns.Name).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			fmt.Printf("Error getting pods: %v\n", err)
+			fmt.Printf("Error getting pods in namespace %s: %v\n", ns.Name, err)
 			continue
 		}
 
 		for _, pod := range pods.Items {
-			fmt.Printf("  - Pod: %s\n", pod.Name)
-			fmt.Printf("    Status: %s\n", pod.Status.Phase)
-			fmt.Printf("    Node: %s\n", pod.Spec.NodeName)
-			fmt.Printf("    IP: %s\n", pod.Status.PodIP)
-			fmt.Println("    Containers:")
 			for _, container := range pod.Spec.Containers {
-				fmt.Printf("      - %s (Image: %s)\n", container.Name, container.Image)
+				imageSet[container.Image] = struct{}{}
 			}
-			fmt.Println("    --------------------")
+
+			for _, container := range pod.Spec.InitContainers {
+				imageSet[container.Image] = struct{}{}
+			}
+
+			for _, container := range pod.Spec.EphemeralContainers {
+				imageSet[container.Image] = struct{}{}
+			}
 		}
-		fmt.Println("==============================")
 	}
 
-	return nil, nil
+	images := make([]string, 0, len(imageSet))
+	for image := range imageSet {
+		images = append(images, image)
+	}
+
+	return images, nil
 }
 
 func (ro *RegistryOptimizer) Run(ctx context.Context) {
@@ -112,7 +137,7 @@ func (ro *RegistryOptimizer) Run(ctx context.Context) {
 
 	}
 
-	registryCost, err := ro.Biling.GetRegistryCost()
+	registryCost, err := ro.billing.GetRegistryCost()
 	if err != nil {
 
 	}
@@ -148,12 +173,9 @@ func (ro *RegistryOptimizer) Run(ctx context.Context) {
 	// сколько сэкономим в час
 	totalCost := sumGB * registryCost
 
-	_ = totalCost
-
-	return
-
+	ro.resourceGauge.WithLabelValues().Set(totalCost)
 }
 
-func (ro *RegistryOptimizer) GetCollectors() *prometheus.Collector {
-	return nil
+func (ro *RegistryOptimizer) GetCollectors() []prometheus.Collector {
+	return []prometheus.Collector{ro.resourceGauge}
 }

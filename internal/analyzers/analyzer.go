@@ -8,5 +8,5 @@ import (
 
 type Analyzer interface {
 	Run(context.Context)
-	GetCollectors() *prometheus.Collector
+	GetCollectors() []prometheus.Collector
 }

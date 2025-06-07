@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os/exec"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
@@ -14,20 +15,29 @@ import (
 var _ analyzers.Analyzer = &KrrAnalyzer{}
 
 type KrrAnalyzer struct {
-	billing   analyzers.Billing
-	collector *Collector
-	cfg       config.KrrAnalyzerConfig
+	billing analyzers.Billing
+	cfg     config.KrrAnalyzerConfig
+
+	resourceGauge *prometheus.GaugeVec
 }
 
 func NewKrrAnalyzer(
 	b analyzers.Billing,
-	collector *Collector,
 	cfg config.KrrAnalyzerConfig,
 ) *KrrAnalyzer {
 	return &KrrAnalyzer{
-		billing:   b,
-		collector: collector,
-		cfg:       cfg,
+		billing: b,
+		cfg:     cfg,
+
+		resourceGauge: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: "kubeconomist",
+				Subsystem: "krr",
+				Name:      "resource_consumption",
+				Help:      "A histogram of resource consumption by k8s cluster",
+			},
+			[]string{labelResourceType, labelConsumptionType, labelConsumptionStatus},
+		),
 	}
 }
 
@@ -58,17 +68,17 @@ type ResourceOptimization struct {
 func (k *KrrAnalyzer) CalculatePrice(rows []krrOutput) {
 	for _, r := range rows {
 		sendMetrics := func(prev, new float64, resource Resource, unit ConsumptionMeasurementUnit) {
-			k.collector.AddResourceConsumption(
+			k.writeConsumptionToGauge(
 				resource, unit, ConsumptionStatusGain,
 				prev-new,
 			)
 
-			k.collector.AddResourceConsumption(
+			k.writeConsumptionToGauge(
 				resource, unit, ConsumptionStatusCurrent,
 				prev,
 			)
 
-			k.collector.AddResourceConsumption(
+			k.writeConsumptionToGauge(
 				resource, unit, ConsumptionStatusRecommended,
 				new,
 			)
@@ -104,6 +114,10 @@ func (k *KrrAnalyzer) CalculatePrice(rows []krrOutput) {
 	}
 
 	return
+}
+
+func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {
+	return []prometheus.Collector{k.resourceGauge}
 }
 
 func (k *KrrAnalyzer) callKRR() (krrOutput, error) {

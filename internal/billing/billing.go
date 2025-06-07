@@ -3,6 +3,7 @@ package billing
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -184,7 +185,7 @@ func genCPUNameForGrep(platform, coreFraction string) string {
 	return fmt.Sprintf("%s. %s", cpu, coreFraction) + "%"
 }
 
-func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) model.PriceRUB {
+func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount model.CPUCount) (model.PriceRUB, error) {
 	name := genCPUNameForGrep(platform, coreFraction)
 
 	var foundedCPU SKU
@@ -203,14 +204,27 @@ func (b *Billing) GetPriceCPURUB(platform string, coreFraction string, cpuCount 
 
 	b.mu.RUnlock()
 
+	if len(foundedCPU.PricingVersions) != 1 {
+		return 0, fmt.Errorf("unexpected length of pricing versions: %d",
+			len(foundedCPU.PricingVersions))
+	}
+
+	if len(foundedCPU.PricingVersions[0].PricingExpression.Rates) != 1 {
+		return 0, fmt.Errorf("unexpected length of pricing expressions rates: %d",
+			len(foundedCPU.PricingVersions[0].PricingExpression.Rates))
+	}
+
 	price := foundedCPU.PricingVersions[0].PricingExpression.Rates[0].UnitPrice
 
-	res, _ := strconv.ParseFloat(price, 32)
+	res, err := strconv.ParseFloat(price, 32)
+	if err != nil {
+		return 0, errors.New("failed to parse float")
+	}
 
-	return model.PriceRUB(res * float64(cpuCount))
+	return model.PriceRUB(res * float64(cpuCount)), nil
 }
 
-func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) model.PriceRUB {
+func (b *Billing) GetPriceRAMRUB(platform string, coreFraction string, ramCount model.RAMCount) (model.PriceRUB, error) {
 
-	return 0
+	return 0, nil
 }

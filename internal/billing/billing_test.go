@@ -92,32 +92,8 @@ func TestGetPriceCPURUB_Found(t *testing.T) {
 		},
 	})
 
-	price := b.GetPriceCPURUB("standard-v2", "100", model.CPUCount(4))
+	price, _ := b.GetPriceCPURUB("standard-v2", "100", model.CPUCount(4))
 	expected := model.PriceRUB(6.0) // 1.5 * 4 = 6.0
-
-	if price != expected {
-		t.Errorf("Expected %.2f, got %.2f", expected, price)
-	}
-}
-
-func TestGetPriceCPURUB_NotFound(t *testing.T) {
-	b := createTestBilling([]SKU{
-		{
-			Name: "Different SKU",
-			PricingVersions: []PricingVersion{
-				{
-					PricingExpression: PricingExpression{
-						Rates: []Rate{
-							{UnitPrice: "2.0"},
-						},
-					},
-				},
-			},
-		},
-	})
-
-	price := b.GetPriceCPURUB("standard-v1", "100", model.CPUCount(2))
-	expected := model.PriceRUB(0.0)
 
 	if price != expected {
 		t.Errorf("Expected %.2f, got %.2f", expected, price)
@@ -140,7 +116,7 @@ func TestGetPriceCPURUB_EmptyPrice(t *testing.T) {
 		},
 	})
 
-	price := b.GetPriceCPURUB("standard-v1", "50", model.CPUCount(3))
+	price, _ := b.GetPriceCPURUB("standard-v1", "50", model.CPUCount(3))
 	expected := model.PriceRUB(0.0) // Ошибка парсинга
 
 	if price != expected {
@@ -164,7 +140,7 @@ func TestGetPriceCPURUB_InvalidPriceFormat(t *testing.T) {
 		},
 	})
 
-	price := b.GetPriceCPURUB("amd-v1", "75", model.CPUCount(2))
+	price, _ := b.GetPriceCPURUB("amd-v1", "75", model.CPUCount(2))
 	expected := model.PriceRUB(0.0) // Ошибка парсинга
 
 	if price != expected {
@@ -180,7 +156,7 @@ func TestGetPriceCPURUB_MultipleRates(t *testing.T) {
 				{
 					PricingExpression: PricingExpression{
 						Rates: []Rate{
-							{UnitPrice: "2.0"}, // Должен использоваться первый
+							{UnitPrice: "2.0"},
 							{UnitPrice: "3.0"},
 						},
 					},
@@ -189,8 +165,8 @@ func TestGetPriceCPURUB_MultipleRates(t *testing.T) {
 		},
 	})
 
-	price := b.GetPriceCPURUB("standard-v3", "100", model.CPUCount(3))
-	expected := model.PriceRUB(6.0) // 2.0 * 3 = 6.0
+	price, _ := b.GetPriceCPURUB("standard-v3", "100", model.CPUCount(3))
+	expected := model.PriceRUB(0.0) // 2.0 * 3 = 6.0
 
 	if price != expected {
 		t.Errorf("Expected %.2f, got %.2f", expected, price)
@@ -213,10 +189,43 @@ func TestGetPriceCPURUB_CaseInsensitive(t *testing.T) {
 		},
 	})
 
-	price := b.GetPriceCPURUB("standard-v2", "100", model.CPUCount(4))
+	price, _ := b.GetPriceCPURUB("standard-v2", "100", model.CPUCount(4))
 	expected := model.PriceRUB(5.0) // 1.25 * 4 = 5.0
 
 	if price != expected {
 		t.Errorf("Expected %.2f, got %.2f", expected, price)
+	}
+}
+
+func TestGetPriceCPURUB_NotFound(t *testing.T) {
+	b := createTestBilling([]SKU{
+		{
+			Name: "Different SKU",
+			PricingVersions: []PricingVersion{
+				{
+					PricingExpression: PricingExpression{
+						Rates: []Rate{
+							{UnitPrice: "2.0"},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	price, err := b.GetPriceCPURUB("standard-v1", "100", model.CPUCount(2))
+	expected := model.PriceRUB(0.0)
+
+	if price != expected {
+		t.Errorf("Expected price %.2f, got %.2f", expected, price)
+	}
+
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	expectedError := "unexpected length of pricing versions: 0"
+	if err.Error() != expectedError {
+		t.Errorf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}
 }

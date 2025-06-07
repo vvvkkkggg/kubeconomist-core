@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"os/exec"
 
-	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
-
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 )
 
 var _ analyzers.Analyzer = &KrrAnalyzer{}
@@ -16,10 +16,19 @@ var _ analyzers.Analyzer = &KrrAnalyzer{}
 type KrrAnalyzer struct {
 	billing   analyzers.Billing
 	collector *Collector
+	cfg       config.KrrAnalyzerConfig
 }
 
-func NewKrrAnalyzer(b analyzers.Billing, collector *Collector) *KrrAnalyzer {
-	return &KrrAnalyzer{billing: b, collector: collector}
+func NewKrrAnalyzer(
+	b analyzers.Billing,
+	collector *Collector,
+	cfg config.KrrAnalyzerConfig,
+) *KrrAnalyzer {
+	return &KrrAnalyzer{
+		billing:   b,
+		collector: collector,
+		cfg:       cfg,
+	}
 }
 
 func (k *KrrAnalyzer) Run(ctx context.Context) {
@@ -69,7 +78,12 @@ func (k *KrrAnalyzer) CalculatePrice(rows []ResourceOptimization) (
 }
 
 func (k *KrrAnalyzer) callKRR() (krrOutput, error) {
-	cmd := exec.Command("krr", "simple", "-f", "json")
+	cmd := exec.Command(
+		"krr", "simple",
+		"-p", k.cfg.PrometheusURL,
+		"--prometheus-auth-header", k.cfg.PrometheusAuthHeader,
+		"--history-duration", k.cfg.HistoryDuration,
+		"-f", "json")
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout

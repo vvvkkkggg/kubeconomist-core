@@ -12,10 +12,13 @@ type (
 	}
 
 	AnalyzersConfig struct {
-		krr KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
+		KRR KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
 	}
 
 	KrrAnalyzerConfig struct {
+		PrometheusURL        string `mapstructure:"prometheus_url" validate:"required"`
+		PrometheusAuthHeader string `mapstructure:"prometheus_auth_header" validate:"required"`
+		HistoryDuration      string `mapstructure:"history_duration" validate:"required"`
 	}
 )
 

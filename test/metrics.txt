@@ -1,3 +1,4 @@
+kubeconomist{requests_type="rub", requests_status="gain", asd="123"} 518236.0
 kubeconomist_dns_optimizer_dns_optimization_zone{cloud_id="9998lnqj42dal6t111o7",folder_id="1148enq242dal6t111o7",zone_id="dnsa1qlkf6k5bad7ncrf",is_used="true"} 1.000 1749365442
 kubeconomist_dns_optimizer_dns_optimization_zone{cloud_id="9998lnqj42dal6t111o7",folder_id="1148enq242dal6t111o7",zone_id="dnsa1qlkf6k5bad7ncrf",is_used="true"} 1.000 1749365502
 kubeconomist_dns_optimizer_dns_optimization_zone{cloud_id="9998lnqj42dal6t111o7",folder_id="1148enq242dal6t111o7",zone_id="dnsa1qlkf6k5bad7ncrf",is_used="true"} 1.000 1749365562

@@ -2,21 +2,21 @@ import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import React from 'react';
 import type { SortDirection } from '../hooks/useSort';
 
-interface SortableHeaderProps {
+interface SortableHeaderProps<T> {
   children: React.ReactNode;
-  sortKey: string;
-  currentSortKey: string;
+  sortKey: keyof T;
+  currentSortKey: keyof T;
   direction: SortDirection;
-  onRequestSort: (key: string) => void;
+  onRequestSort: (key: keyof T) => void;
 }
 
-export const SortableHeader: React.FC<SortableHeaderProps> = ({
+export const SortableHeader = <T extends object>({
   children,
   sortKey,
   currentSortKey,
   direction,
   onRequestSort,
-}) => {
+}: SortableHeaderProps<T>) => {
   const isSorting = currentSortKey === sortKey;
   const SortIcon = isSorting
     ? direction === 'ascending'

@@ -1,5 +1,7 @@
-import React from 'react';
+import { unparse } from 'papaparse';
+import React, { useMemo, useState } from 'react';
 import { SortableHeader } from '../components/SortableHeader';
+import { ViewHeader } from '../components/ViewHeader';
 import { mockRegistryRecommendations } from '../data/registry-mock-data';
 import { useSort } from '../hooks/useSort';
 
@@ -15,7 +17,17 @@ const timeSince = (date: string): string => {
 };
 
 export const RegistryView: React.FC = () => {
-    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(mockRegistryRecommendations, 'severity', 'descending');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredRecs = useMemo(() => {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        return mockRegistryRecommendations.filter(rec =>
+            rec.imageName.toLowerCase().includes(lowerCaseQuery) ||
+            rec.tags.some(tag => tag.toLowerCase().includes(lowerCaseQuery))
+        );
+    }, [searchQuery]);
+
+    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(filteredRecs, 'severity', 'descending');
 
     const sortProps = {
         currentSortKey: sortKey,
@@ -23,9 +35,33 @@ export const RegistryView: React.FC = () => {
         onRequestSort: requestSort,
     };
 
+    const handleExport = () => {
+        const dataToExport = sortedRecs.map(rec => ({
+            ImageName: rec.imageName,
+            Tags: rec.tags.join(', '),
+            SizeMB: rec.sizeMB,
+            LastUsed: rec.lastUsed,
+            Severity: rec.severity,
+        }));
+        const csv = unparse(dataToExport);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', 'registry-recommendations.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div>
             <h2 className="view-header">Container Registry Recommendations ({sortedRecs.length})</h2>
+            <ViewHeader
+                onSearch={setSearchQuery}
+                onHideEmptyToggle={() => {}}
+                showHideEmpty={false}
+                onExport={handleExport}
+            />
             <div className="table-container">
                 <table>
                     <thead>

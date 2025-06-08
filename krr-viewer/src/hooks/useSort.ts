@@ -2,31 +2,26 @@ import { useMemo, useState } from 'react';
 
 export type SortDirection = 'ascending' | 'descending';
 
-// Helper to resolve nested property values.
-const get = (obj: any, path: string): any => {
-  return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-};
-
 const SEVERITY_ORDER = { "CRITICAL": 3, "WARNING": 2, "OK": 1, "GOOD": 1, "UNKNOWN": 0 };
 
 
 export const useSort = <T extends object>(
   items: T[],
-  initialSortKey: string,
+  initialSortKey: keyof T,
   initialDirection: SortDirection = 'ascending'
 ) => {
-  const [sortKey, setSortKey] = useState<string>(initialSortKey);
+  const [sortKey, setSortKey] = useState<keyof T>(initialSortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialDirection);
 
   const sortedItems = useMemo(() => {
-    const sorted = [...items].sort((a, b) => {
-      const aValue = get(a, sortKey);
-      const bValue = get(b, sortKey);
+    return [...items].sort((a, b) => {
+      const aValue = a[sortKey];
+      const bValue = b[sortKey];
 
       if (aValue === null || aValue === undefined) return 1;
       if (bValue === null || bValue === undefined) return -1;
       
-      if (sortKey.toLowerCase().includes('severity')) {
+      if (typeof sortKey === 'string' && sortKey.toLowerCase().includes('severity')) {
           const aSeverity = SEVERITY_ORDER[aValue as keyof typeof SEVERITY_ORDER] ?? -1;
           const bSeverity = SEVERITY_ORDER[bValue as keyof typeof SEVERITY_ORDER] ?? -1;
           return sortDirection === 'ascending' ? aSeverity - bSeverity : bSeverity - aSeverity;
@@ -40,11 +35,9 @@ export const useSort = <T extends object>(
       }
       return 0;
     });
-
-    return sorted;
   }, [items, sortKey, sortDirection]);
 
-  const requestSort = (key: string) => {
+  const requestSort = (key: keyof T) => {
     let direction: SortDirection = 'ascending';
     if (sortKey === key && sortDirection === 'ascending') {
       direction = 'descending';

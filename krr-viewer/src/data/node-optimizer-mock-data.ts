@@ -1,0 +1,53 @@
+import type { NodeOptimizerRecommendation } from '../types';
+
+export const mockNodeOptimizerRecommendations: NodeOptimizerRecommendation[] = [
+  {
+    id: 'fhml27d2blurm1gj34pu',
+    cloudId: 'b1g8vl7ekjq3a5d9f2m1',
+    folderId: 'fo1e3k9lmn4p5q6r7s8',
+    instanceId: 'fhml27d2blurm1gj34pu',
+    currentCores: 8,
+    desiredCores: 4,
+    currentMemoryGB: 32,
+    desiredMemoryGB: 32,
+    currentPrice: 150.50,
+    desiredPrice: 80.25,
+  },
+  {
+    id: 'fhm8i6d6b8j2j4a6n0n1',
+    cloudId: 'b1g8vl7ekjq3a5d9f2m1',
+    folderId: 'fo1e3k9lmn4p5q6r7s8',
+    instanceId: 'fhm8i6d6b8j2j4a6n0n1',
+    currentCores: 16,
+    desiredCores: 8,
+    currentMemoryGB: 64,
+    desiredMemoryGB: 64,
+    currentPrice: 301.00,
+    desiredPrice: 160.50,
+  },
+  {
+    id: 'epd3k8v3g4b1h2b5b8u1',
+    cloudId: 'b1g8vl7ekjq3a5d9f2m1',
+    folderId: 'fo2a3b4c5d6e7f8g9h0',
+    instanceId: 'epd3k8v3g4b1h2b5b8u1',
+    currentCores: 4,
+    desiredCores: 2,
+    currentMemoryGB: 16,
+    desiredMemoryGB: 16,
+    currentPrice: 75.25,
+    desiredPrice: 40.12,
+  },
+  // An instance that is already optimized
+  {
+    id: 'epd9v1c8c5k6l7m8n9p0',
+    cloudId: 'b1g8vl7ekjq3a5d9f2m1',
+    folderId: 'fo2a3b4c5d6e7f8g9h0',
+    instanceId: 'epd9v1c8c5k6l7m8n9p0',
+    currentCores: 2,
+    desiredCores: 2,
+    currentMemoryGB: 8,
+    desiredMemoryGB: 8,
+    currentPrice: 40.12,
+    desiredPrice: 40.12,
+  },
+]; 

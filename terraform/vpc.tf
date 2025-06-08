@@ -1,5 +1,5 @@
 resource "yandex_vpc_address" "static_ip" {
-  count = 3
+  count = 0
   name  = "alkosenko-static-ip-${count.index + 1}"
   external_ipv4_address {
     zone_id = var.zone

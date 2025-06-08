@@ -94,7 +94,6 @@ func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 		}
 
 		if r.Object.Allocations.Requests.CPU != nil && *r.Object.Allocations.Requests.CPU > *r.Recommended.Requests.CPU.Value {
-			// todo: remove hardcoded platform
 			price, err := k.billing.GetPriceCPURUB("standard-v1", "100", model.CPUCount(*r.Object.Allocations.Requests.CPU-*r.Recommended.Requests.CPU.Value))
 			if err != nil {
 				panic(err)
@@ -107,14 +106,14 @@ func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 			)
 
 			sendMetrics(
-				*r.Object.Allocations.Requests.CPU*float64(price), *r.Recommended.Requests.CPU.Value*float64(price), // todo: add money multiplier
+				*r.Object.Allocations.Requests.CPU*float64(price)*float64(len(r.Object.Pods)),
+				*r.Recommended.Requests.CPU.Value*float64(price)*float64(len(r.Object.Pods)),
 				ResourceCPU,
 				ConsumptionMoney,
 			)
 		}
 
 		if r.Object.Allocations.Requests.Memory != nil && *r.Object.Allocations.Requests.Memory > *r.Recommended.Requests.Memory.Value {
-			// todo: remove hardcoded platform
 			price, err := k.billing.GetPriceRAMRUB("standard-v1", model.RAMCount(*r.Object.Allocations.Requests.Memory-*r.Recommended.Requests.Memory.Value))
 			if err != nil {
 				panic(err)
@@ -127,7 +126,8 @@ func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 			)
 
 			sendMetrics(
-				*r.Object.Allocations.Requests.Memory*float64(price), *r.Recommended.Requests.Memory.Value*float64(price), // todo: add money multiplier
+				*r.Object.Allocations.Requests.Memory*float64(price)*float64(len(r.Object.Pods)),
+				*r.Recommended.Requests.Memory.Value*float64(price)*float64(len(r.Object.Pods)),
 				ResourceRAM,
 				ConsumptionMoney,
 			)

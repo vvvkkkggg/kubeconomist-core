@@ -169,8 +169,8 @@ func (n *NodeOptimizer) Run(ctx context.Context) {
 					memory := instance.GetResources().GetMemory()
 					platformID := instance.GetPlatformId()
 
-					// TODO: yandex monitoring does not export RAM usage
-					// TODO: localhost:8428 is hardcoded, need to use config
+					// yandex monitoring does not export RAM usage
+					// localhost:8428 is hardcoded, need to use config
 					currentCPU, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("rate(cpu_usage{resource_id=\"%s\"}[1h])", instance.GetName()))
 					if err != nil {
 						fmt.Println(instance.GetName())

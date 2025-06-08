@@ -79,7 +79,7 @@ func (n *PlatformOptimizer) Run(ctx context.Context) {
 
 				cheapestPrice := currentPrice
 				cheapestPlatformID := platformID
-				// TODO: Get platfrom IDs from billing package
+				// Get platfrom IDs from billing package
 				for _, p := range []string{"standard-v1", "standard-v2", "standard-v3"} {
 					if p == platformID {
 						continue

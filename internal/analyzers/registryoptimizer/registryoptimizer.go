@@ -30,6 +30,9 @@ type RegistryOptimizer struct {
 	yandex    *yandex.Client
 
 	resourceGauge *prometheus.GaugeVec
+
+	CloudID  string
+	FolderID string
 }
 
 func NewRegistryOptimizer(billing Biling, cfg *config.Config) *RegistryOptimizer {
@@ -68,28 +71,22 @@ func NewRegistryOptimizer(billing Biling, cfg *config.Config) *RegistryOptimizer
 	}
 }
 
-func getYandexImages(ctx context.Context, yandex *yandex.Client) (map[string]*compute.Image, error) {
-	clouds, err := yandex.GetClouds(ctx)
+func getYandexImages(ctx context.Context, yandex *yandex.Client, cloudID, folderID string) (map[string]*compute.Image, error) {
+	folders, err := yandex.GetAllFolders(ctx, cloudID, folderID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get clouds: %w", err)
+		return nil, fmt.Errorf("failed to get folders: %w", err)
 	}
 
 	ycImages := make(map[string]*compute.Image, 0)
-	for _, cloud := range clouds {
-		folders, err := yandex.GetFolders(ctx, cloud.Id)
+
+	for _, folder := range folders {
+		images, err := yandex.GetImages(ctx, folder.Id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get folders for cloud %s: %w", cloud.Id, err)
+			return nil, fmt.Errorf("failed to get addresses for folder %s: %w", folder.Id, err)
 		}
 
-		for _, folder := range folders {
-			images, err := yandex.GetImages(ctx, folder.Id)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get addresses for folder %s: %w", folder.Id, err)
-			}
-
-			for _, image := range images.Images {
-				ycImages[image.Name] = image
-			}
+		for _, image := range images.Images {
+			ycImages[image.Name] = image
 		}
 	}
 
@@ -170,7 +167,7 @@ func computeCost(ycImages map[string]*compute.Image, k8sImages []string, registr
 }
 
 func (ro *RegistryOptimizer) Run(ctx context.Context) {
-	ycImages, err := getYandexImages(ctx, ro.yandex)
+	ycImages, err := getYandexImages(ctx, ro.yandex, ro.CloudID, ro.FolderID)
 	if err != nil {
 		panic(err.Error())
 	}

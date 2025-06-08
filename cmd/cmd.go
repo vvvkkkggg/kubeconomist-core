@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	dnsoptimizer "github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/dns"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krr"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/nodeoptimizer"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/platformoptimizer"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/registryoptimizer"
@@ -48,13 +49,13 @@ func Run() error {
 
 	// FIXME: ВОТ ТУТ ОТКЛЮЧАТЬ АНАЛАЙЗЕРЫ ДЛЯ ДЕБАГА
 	analyzerList := []analyzers.Analyzer{
-		// krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
-		vpc.NewVPCAnalyzer(yandexClient),
-		platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
+		vpc.NewVPCAnalyzer(yandexClient, cfg.Analyzers.CloudID, cfg.Analyzers.FolderID),
+		platformoptimizer.NewPlatformOptimizer(yandexClient, billing, cfg.Analyzers.CloudID, cfg.Analyzers.FolderID),
 		registryoptimizer.NewRegistryOptimizer(billing, cfg),
-		nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
-		dnsoptimizer.NewDNSOptimizer(yandexClient, billing),
-		storageoptimizer.NewStorageOptimizer(yandexClient, billing),
+		nodeoptimizer.NewNodeOptimizer(yandexClient, billing, cfg.Analyzers.CloudID, cfg.Analyzers.FolderID),
+		dnsoptimizer.NewDNSOptimizer(yandexClient, billing, cfg.Analyzers.CloudID, cfg.Analyzers.FolderID),
+		storageoptimizer.NewStorageOptimizer(yandexClient, billing, cfg.Analyzers.CloudID, cfg.Analyzers.FolderID),
 	}
 
 	var collectors []prometheus.Collector

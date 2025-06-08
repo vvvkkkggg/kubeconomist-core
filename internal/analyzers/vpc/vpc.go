@@ -2,6 +2,7 @@ package vpc
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -15,6 +16,9 @@ var _ analyzers.Analyzer = &VPCAnalyzer{}
 type VPCAnalyzer struct {
 	yandex *yandex.Client
 	m      *prometheus.GaugeVec
+
+	cloudID  string
+	folderID string
 }
 
 type Address struct {
@@ -25,7 +29,7 @@ type Address struct {
 	IsReserved bool
 }
 
-func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
+func NewVPCAnalyzer(ya *yandex.Client, cloudID, folderID string) *VPCAnalyzer {
 	// 241.05 рублей за 1 неиспользуемый IP адрес в месяц
 	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -44,37 +48,31 @@ func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
 }
 
 func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
-	clouds, err := v.yandex.GetClouds(ctx)
+	folders, err := v.yandex.GetAllFolders(ctx, v.cloudID, v.folderID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get all folders: %w", err)
 	}
 
 	addrs := make([]Address, 0)
-	for _, cloud := range clouds {
-		folders, err := v.yandex.GetFolders(ctx, cloud.Id)
+
+	for _, folder := range folders {
+		as, err := v.yandex.GetAddresses(ctx, folder.Id)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, folder := range folders {
-			as, err := v.yandex.GetAddresses(ctx, folder.Id)
-			if err != nil {
-				return nil, err
+		for _, a := range as {
+			if a.GetIpVersion() != vpc.Address_IPV4 {
+				continue
 			}
 
-			for _, a := range as {
-				if a.GetIpVersion() != vpc.Address_IPV4 {
-					continue
-				}
-
-				addrs = append(addrs, Address{
-					CloudID:    cloud.Id,
-					FolderID:   folder.Id,
-					IP:         a.GetExternalIpv4Address().GetAddress(),
-					IsUsed:     a.GetUsed(),
-					IsReserved: a.GetReserved(),
-				})
-			}
+			addrs = append(addrs, Address{
+				CloudID:    folder.CloudId,
+				FolderID:   folder.Id,
+				IP:         a.GetExternalIpv4Address().GetAddress(),
+				IsUsed:     a.GetUsed(),
+				IsReserved: a.GetReserved(),
+			})
 		}
 	}
 

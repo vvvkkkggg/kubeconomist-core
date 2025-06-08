@@ -27,9 +27,12 @@ type StorageOptimizer struct {
 	storageClass *prometheus.GaugeVec
 	yandex       *yandex.Client
 	billing      *billing.Billing
+
+	cloudID  string
+	folderID string
 }
 
-func NewStorageOptimizer(yandex *yandex.Client, billing *billing.Billing) *StorageOptimizer {
+func NewStorageOptimizer(yandex *yandex.Client, billing *billing.Billing, cloudID, folderID string) *StorageOptimizer {
 	price := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
@@ -55,6 +58,9 @@ func NewStorageOptimizer(yandex *yandex.Client, billing *billing.Billing) *Stora
 		storageClass: storageClass,
 		yandex:       yandex,
 		billing:      billing,
+
+		cloudID:  cloudID,
+		folderID: folderID,
 	}
 }
 
@@ -73,103 +79,96 @@ func (so *StorageOptimizer) Run(ctx context.Context) {
 		default:
 		}
 
-		clouds, err := so.yandex.GetClouds(ctx)
+		folders, err := so.yandex.GetAllFolders(ctx, so.cloudID, so.folderID)
 		if err != nil {
-			slog.Error("get clouds err", slog.Any("err", err))
+			slog.Error("failder to get folders", slog.Any("err", err))
 			return
 		}
 
-		for _, cloud := range clouds {
-			folders, err := so.yandex.GetFolders(ctx, cloud.Id)
+		for _, folder := range folders {
+			buckets, err := so.yandex.GetBuckets(ctx, folder.Id)
 			if err != nil {
-				slog.Error("get folders err", slog.Any("err", err))
+				slog.Error("get buckets err", slog.Any("err", err))
 				return
 			}
 
-			for _, folder := range folders {
-				buckets, err := so.yandex.GetBuckets(ctx, folder.Id)
+			for _, bucket := range buckets {
+				// TODO: hardcode localhost:8428, should be configurable
+				queriesCount, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("sum(increase(rps{resource_id=\"%s\"}[24h]))", bucket.GetName()))
 				if err != nil {
-					slog.Error("get buckets err", slog.Any("err", err))
-					return
+					slog.Error("failed to query Prometheus for bucket RPS", slog.Any("err", err), slog.String("bucket", bucket.GetName()))
+					continue
 				}
 
-				for _, bucket := range buckets {
-					// TODO: hardcode localhost:8428, should be configurable
-					queriesCount, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("sum(increase(rps{resource_id=\"%s\"}[24h]))", bucket.GetName()))
-					if err != nil {
-						slog.Error("failed to query Prometheus for bucket RPS", slog.Any("err", err), slog.String("bucket", bucket.GetName()))
-						continue
+				spaceUsage, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("space_usage{resource_id=\"%s\",resource_type=\"bucket\",storage_type=\"All\"}", bucket.GetName()))
+				if err != nil {
+					slog.Error("failed to query Prometheus for bucket space usage", slog.Any("err", err), slog.String("bucket", bucket.GetName()))
+					continue
+				}
+
+				spaceUsageGiB := spaceUsage / 1024 / 1024 / 1024
+
+				storageClass := bucket.GetDefaultStorageClass()
+
+				currentPrice := -1.0
+				minPrice := math.MaxFloat64
+				minStorageClass := storageClass
+				// TODO: do not hardcode
+				for _, sc := range []string{"STANDARD_IA", "COLD", "ICE"} {
+					// TODO: queries count shoud be divided 10k or 1k. But skip for now.
+					// TODO: queries should count for each operation type, lets get only POST for now.
+					var price float64
+					switch sc {
+					case "STANDARD_IA":
+						price = prices.StoragePrices.Standard*spaceUsageGiB + (queriesCount/1000.0)*prices.StandardOperations.Post
+					case "COLD":
+						price = prices.StoragePrices.Cold*spaceUsageGiB + (queriesCount/1000.0)*prices.ColdOperations.Post
+					case "ICE":
+						price = prices.StoragePrices.Ice*spaceUsageGiB + (queriesCount/1000.0)*prices.IceOperations.Post
+					default:
+						panic("здорово ты это придумал")
 					}
 
-					spaceUsage, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("space_usage{resource_id=\"%s\",resource_type=\"bucket\",storage_type=\"All\"}", bucket.GetName()))
-					if err != nil {
-						slog.Error("failed to query Prometheus for bucket space usage", slog.Any("err", err), slog.String("bucket", bucket.GetName()))
-						continue
+					if price < minPrice {
+						minPrice = price
+						minStorageClass = sc
 					}
 
-					spaceUsageGiB := spaceUsage / 1024 / 1024 / 1024
+					if sc == storageClass {
+						currentPrice = price
+					}
+				}
 
-					storageClass := bucket.GetDefaultStorageClass()
+				so.price.With(prometheus.Labels{
+					"cloud_id":    folder.CloudId,
+					"folder_id":   folder.Id,
+					"bucket_name": bucket.GetName(),
+					"status":      "current",
+				}).Set(currentPrice)
 
-					currentPrice := -1.0
-					minPrice := math.MaxFloat64
-					minStorageClass := storageClass
-					// TODO: do not hardcode
-					for _, sc := range []string{"STANDARD_IA", "COLD", "ICE"} {
-						// TODO: queries count shoud be divided 10k or 1k. But skip for now.
-						// TODO: queries should count for each operation type, lets get only POST for now.
-						var price float64
-						switch sc {
-						case "STANDARD_IA":
-							price = prices.StoragePrices.Standard*spaceUsageGiB + (queriesCount/1000.0)*prices.StandardOperations.Post
-						case "COLD":
-							price = prices.StoragePrices.Cold*spaceUsageGiB + (queriesCount/1000.0)*prices.ColdOperations.Post
-						case "ICE":
-							price = prices.StoragePrices.Ice*spaceUsageGiB + (queriesCount/1000.0)*prices.IceOperations.Post
-						default:
-							panic("здорово ты это придумал")
-						}
+				so.price.With(prometheus.Labels{
+					"cloud_id":    folder.CloudId,
+					"folder_id":   folder.Id,
+					"bucket_name": bucket.GetName(),
+					"status":      "desired",
+				}).Set(minPrice)
 
-						if price < minPrice {
-							minPrice = price
-							minStorageClass = sc
-						}
-
-						if sc == storageClass {
-							currentPrice = price
-						}
+				for _, storageClass := range []string{"STANDARD_IA", "COLD", "ICE"} {
+					indicator := 0.0
+					if storageClass == minStorageClass {
+						indicator = 1.0
 					}
 
-					so.price.With(prometheus.Labels{
-						"cloud_id":    cloud.Id,
-						"folder_id":   folder.Id,
-						"bucket_name": bucket.GetName(),
-						"status":      "current",
-					}).Set(currentPrice)
-
-					so.price.With(prometheus.Labels{
-						"cloud_id":    cloud.Id,
-						"folder_id":   folder.Id,
-						"bucket_name": bucket.GetName(),
-						"status":      "desired",
-					}).Set(minPrice)
-
-					for _, storageClass := range []string{"STANDARD_IA", "COLD", "ICE"} {
-						indicator := 0.0
-						if storageClass == minStorageClass {
-							indicator = 1.0
-						}
-
-						so.storageClass.With(prometheus.Labels{
-							"cloud_id":      cloud.Id,
-							"folder_id":     folder.Id,
-							"bucket_name":   bucket.GetName(),
-							"storage_class": storageClass,
-						}).Set(indicator)
-					}
+					so.storageClass.With(prometheus.Labels{
+						"cloud_id":      folder.CloudId,
+						"folder_id":     folder.Id,
+						"bucket_name":   bucket.GetName(),
+						"storage_class": storageClass,
+					}).Set(indicator)
 				}
 			}
 		}
+
 	}
 }
 

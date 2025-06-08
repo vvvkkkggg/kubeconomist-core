@@ -2,6 +2,7 @@ package vpc
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
@@ -30,10 +31,10 @@ func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "vpc",
-			Name:      "ip_is_used",
-			Help:      "Is used IP",
+			Name:      "ip_info",
+			Help:      "IP info",
 		},
-		[]string{"ip_address"},
+		[]string{"cloud_id", "folder_id", "ip_address", "is_used", "is_reserved"},
 	)
 
 	return &VPCAnalyzer{
@@ -97,16 +98,22 @@ func (v *VPCAnalyzer) Run(ctx context.Context) {
 				continue
 			}
 
-			isUsed := 0.0
-			if addr.IsUsed {
-				isUsed = 1.0
-			}
-
 			v.m.With(prometheus.Labels{
-				"ip_address": addr.IP,
-			}).Set(isUsed)
+				"cloud_id":    addr.CloudID,
+				"folder_id":   addr.FolderID,
+				"ip_address":  addr.IP,
+				"is_used":     strconv.Itoa(boolToInt(addr.IsUsed)),
+				"is_reserved": strconv.Itoa(boolToInt(addr.IsReserved)),
+			}).Set(1.0)
 		}
 	}
+}
+
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 func (v *VPCAnalyzer) GetCollectors() []prometheus.Collector {

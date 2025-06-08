@@ -1,0 +1,10 @@
+# HELP kubeconomist_node_optimizer_unused_images Estimated disk space (MB) occupied by unused Docker images
+# TYPE kubeconomist_node_optimizer_unused_images gauge
+kubeconomist_node_optimizer_unused_images{status="current"} 3475.8
+kubeconomist_node_optimizer_unused_images{status="current"} 4218.2
+kubeconomist_node_optimizer_unused_images{status="current"} 2893.6
+kubeconomist_node_optimizer_unused_images{status="desired"} 1200.0
+kubeconomist_node_optimizer_unused_images{status="desired"} 1500.0
+kubeconomist_node_optimizer_unused_images{status="desired"} 1000.0
+kubeconomist_node_optimizer_unused_images{status="current"} 5872.4
+kubeconomist_node_optimizer_unused_images{status="desired"} 2500.0

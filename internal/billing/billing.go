@@ -576,3 +576,20 @@ func normalizePrice(priceStr, unit string) (float64, error) {
 
 	return result, nil
 }
+
+func (b *Billing) CalculatePrice(platformID string, coreFraction, cores, memory int64) (float64, error) {
+	currentPriceCPU, err := b.GetPriceCPURUB(platformID, strconv.Itoa(int(coreFraction)), model.CPUCount(float64(cores)))
+	if err != nil {
+		return 0, err
+	}
+
+	// мрак нахуй
+	memoryInGB := float64(memory) / float64(1024*1024*1024)
+
+	currentPriceMemory, err := b.GetPriceRAMRUB(platformID, model.RAMCount(memoryInGB))
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(currentPriceCPU + currentPriceMemory), nil
+}

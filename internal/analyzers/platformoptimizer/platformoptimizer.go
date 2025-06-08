@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/model"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 )
 
@@ -44,20 +42,6 @@ func (n *PlatformOptimizer) GetCollectors() []prometheus.Collector {
 	return []prometheus.Collector{
 		n.metric,
 	}
-}
-
-func (n *PlatformOptimizer) calculatePrice(platformID string, coreFraction, cores, memory int64) (float64, error) {
-	currentPriceCPU, err := n.billing.GetPriceCPURUB(platformID, strconv.Itoa(int(coreFraction)), model.CPUCount(float64(cores)))
-	if err != nil {
-		return 0, err
-	}
-
-	currentPriceMemory, err := n.billing.GetPriceRAMRUB(platformID, model.RAMCount(float64(memory)))
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(currentPriceCPU + currentPriceMemory), nil
 }
 
 func (n *PlatformOptimizer) Run(ctx context.Context) {
@@ -95,7 +79,7 @@ func (n *PlatformOptimizer) Run(ctx context.Context) {
 					memory := nodeGroup.GetNodeTemplate().GetResourcesSpec().GetMemory()
 					platformID := nodeGroup.GetNodeTemplate().GetPlatformId()
 
-					currentPrice, err := n.calculatePrice(platformID, coreFraction, cores, memory)
+					currentPrice, err := n.billing.CalculatePrice(platformID, coreFraction, cores, memory)
 					if err != nil {
 						slog.Error("calculate price err", slog.Any("err", err))
 						return
@@ -109,7 +93,7 @@ func (n *PlatformOptimizer) Run(ctx context.Context) {
 							continue
 						}
 
-						price, err := n.calculatePrice(p, coreFraction, cores, memory)
+						price, err := n.billing.CalculatePrice(p, coreFraction, cores, memory)
 						if err != nil {
 							if errors.Is(err, billing.ErrFlavourNotFound) {
 								continue

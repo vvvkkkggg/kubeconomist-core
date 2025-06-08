@@ -20,6 +20,7 @@ type DNSOptimizer struct {
 }
 
 func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing) *DNSOptimizer {
+	// Константный прайс 38.88 рублей за 1 DNS зону в месяц
 	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",

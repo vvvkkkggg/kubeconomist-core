@@ -2,13 +2,12 @@ package nodeoptimizer
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
-	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/prom"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/yandex"
 )
 
@@ -117,33 +116,6 @@ func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOpti
 	}
 }
 
-func QueryPrometheus(promURL, query string) (float64, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/api/v1/query?query=%s", promURL, query))
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	var data struct {
-		Data struct {
-			Result []struct {
-				Value [2]interface{}
-			}
-		}
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return 0, err
-	}
-	if len(data.Data.Result) == 0 {
-		return 0, fmt.Errorf("no data")
-	}
-
-	valueStr := data.Data.Result[0].Value[1].(string)
-	var value float64
-	fmt.Sscanf(valueStr, "%f", &value)
-	return value, nil
-}
-
 func FindClosestCPU(platformID string, coreFraction int, targetCPU float64) int {
 	configs, ok := InstanceConfigurations[platformID][coreFraction]
 	if !ok {
@@ -198,7 +170,8 @@ func (n *NodeOptimizer) Run(ctx context.Context) {
 					platformID := instance.GetPlatformId()
 
 					// TODO: yandex monitoring does not export RAM usage
-					currentCPU, err := QueryPrometheus("http://localhost:8428", fmt.Sprintf("rate(cpu_usage{resource_id=\"%s\"}[1h])", instance.GetName()))
+					// TODO: localhost:8428 is hardcoded, need to use config
+					currentCPU, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("rate(cpu_usage{resource_id=\"%s\"}[1h])", instance.GetName()))
 					if err != nil {
 						fmt.Println(instance.GetName())
 						slog.Error("query prometheus err", slog.Any("err", err))

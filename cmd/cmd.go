@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	dnsoptimizer "github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/dns"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/storageoptimizer"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
@@ -48,6 +49,7 @@ func Run() error {
 		// nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
 		// platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
 		dnsoptimizer.NewDNSOptimizer(yandexClient, billing),
+		storageoptimizer.NewStorageOptimizer(yandexClient, billing),
 	}
 
 	var collectors []prometheus.Collector

@@ -9,10 +9,6 @@ import (
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/vpc/v1"
 )
 
-const (
-	pricePerIPPerHourUSD = 0.005 // Установленная ставка за 1 IP/час
-)
-
 var _ analyzers.Analyzer = &VPCAnalyzer{}
 
 type VPCAnalyzer struct {
@@ -29,6 +25,7 @@ type Address struct {
 }
 
 func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
+	// 241.05 рублей за 1 неиспользуемый IP адрес в месяц
 	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
@@ -44,39 +41,6 @@ func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
 		m:      m,
 	}
 }
-
-func (v *VPCAnalyzer) Collect(ch chan<- prometheus.Metric) {
-	addrs, err := v.GetAddresses(context.Background())
-	if err != nil {
-		return
-	}
-
-	for _, addr := range addrs {
-		if !addr.IsReserved {
-			continue
-		}
-
-		isUsed := 0.0
-		if addr.IsUsed {
-			isUsed = 1.0
-		}
-
-		desc := prometheus.NewDesc("kubeconomist_vpc_ip_status", "Status of IPs", []string{"ip_address"}, nil)
-		ch <- prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, isUsed, addr.IP)
-	}
-}
-
-// func (v *VPCAnalyzer) GetMetric() *prometheus.GaugeVec {
-// 	return prometheus.NewGaugeVec(
-// 		prometheus.GaugeOpts{
-// 			Namespace: "kubeconomist",
-// 			Subsystem: "vpc",
-// 			Name:      "ip_status",
-// 			Help:      "Status of IP addresses in VPC",
-// 		},
-// 		[]string{"ip_address"},
-// 	)
-// }
 
 func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
 	clouds, err := v.yandex.GetClouds(ctx)

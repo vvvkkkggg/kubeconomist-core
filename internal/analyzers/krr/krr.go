@@ -34,8 +34,8 @@ func NewKrrAnalyzer(
 			prometheus.GaugeOpts{
 				Namespace: "kubeconomist",
 				Subsystem: "krr",
-				Name:      "resource_consumption",
-				Help:      "A histogram of resource consumption by k8s cluster",
+				Name:      "resource_recommendation",
+				Help:      "A recommendation of resource by k8s cluster",
 			},
 			[]string{labelPodName, labelCluster, labelResourceType, labelConsumptionType, labelConsumptionStatus},
 		),

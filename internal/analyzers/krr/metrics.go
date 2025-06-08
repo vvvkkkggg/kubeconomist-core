@@ -1,10 +1,10 @@
 package krr
 
 const (
-	labelResourceType      = "resource_type"
-	labelConsumptionType   = "consumption_type"
-	labelConsumptionStatus = "consumption_status"
-	labelCluster           = "cluster"
+	labelResourceType      = "resource_type"   // cpu, ram
+	labelConsumptionType   = "requests_type"   // rub, real
+	labelConsumptionStatus = "requests_status" // current, recommended, gain
+	labelCluster           = "cluster"         // cluster name
 	labelPodName           = "pod_name"
 )
 

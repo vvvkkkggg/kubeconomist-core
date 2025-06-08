@@ -30,8 +30,8 @@ func NewVPCAnalyzer(ya *yandex.Client) *VPCAnalyzer {
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "vpc",
-			Name:      "ip_status",
-			Help:      "Status of IPs",
+			Name:      "ip_is_used",
+			Help:      "Is used IP",
 		},
 		[]string{"ip_address"},
 	)

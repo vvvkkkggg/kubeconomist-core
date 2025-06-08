@@ -81,7 +81,7 @@ func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOpti
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "node_optimizer",
-			Name:      "node_cost",
+			Name:      "node_optimization_price",
 			Help:      "Cost of the node",
 		},
 		[]string{"cloud_id", "folder_id", "instance_id", "status"},
@@ -91,7 +91,7 @@ func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOpti
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "node_optimizer",
-			Name:      "node_cores",
+			Name:      "node_optimization_cores",
 			Help:      "Number of cores in the node",
 		},
 		[]string{"cloud_id", "folder_id", "instance_id", "status"},
@@ -101,7 +101,7 @@ func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOpti
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "node_optimizer",
-			Name:      "node_memory",
+			Name:      "node_optimization_memory",
 			Help:      "Memory of the node",
 		},
 		[]string{"cloud_id", "folder_id", "instance_id", "status"},

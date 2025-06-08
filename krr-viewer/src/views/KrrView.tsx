@@ -2,7 +2,7 @@ import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
 import { RecommendationsTable } from '../components/RecommendationsTable';
 import { ViewHeader } from '../components/ViewHeader';
-import { krrReport } from '../data/krr-mock-data';
+import { useKrrData } from '../hooks/useKrrData';
 import { useSort } from '../hooks/useSort';
 import type { Scan } from '../types';
 
@@ -18,11 +18,16 @@ function formatDate(iso: string) {
 }
 
 export const KrrView: React.FC = () => {
+    const { data: krrReport, loading, error } = useKrrData();
     const [searchQuery, setSearchQuery] = useState('');
     const [hideEmpty, setHideEmpty] = useState(false);
     const [showSavingsOnly, setShowSavingsOnly] = useState(true);
 
     const scans = useMemo(() => {
+        if (!krrReport) {
+            return [];
+        }
+
         let scans = krrReport.scans;
         if (hideEmpty) {
             scans = scans.filter(s => s.severity !== 'UNKNOWN' && s.recommended.requests.cpu.value !== '?');
@@ -44,7 +49,7 @@ export const KrrView: React.FC = () => {
             scans = scans.filter(s => s.object.container.toLowerCase().includes(searchQuery.toLowerCase()))
         }
         return scans;
-    }, [searchQuery, hideEmpty, showSavingsOnly]);
+    }, [krrReport, searchQuery, hideEmpty, showSavingsOnly]);
 
     const { items: sortedScans, requestSort, sortKey, sortDirection } = useSort<Scan>(scans, 'severity', 'descending');
 
@@ -68,6 +73,14 @@ export const KrrView: React.FC = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>Error: {error.message}</div>;
     }
 
     return (

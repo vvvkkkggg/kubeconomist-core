@@ -52,3 +52,19 @@ export default tseslint.config({
   },
 })
 ```
+
+## Development
+
+This application can be run with mock data or by fetching data from a backend.
+
+### Feature Flag
+
+To control the data source, you can use a feature flag. Create a `.env.local` file in the `krr-viewer` directory with the following content:
+
+```
+VITE_USE_BACKEND_DATA=false # set to true to fetch from backend
+```
+
+### Backend Proxy
+
+When using the backend, the application will make requests to `/api`. The `vite.config.ts` is configured to proxy these requests to `http://localhost:8080`. If your backend runs on a different address, you will need to update the `target` in the `vite.config.ts` file.

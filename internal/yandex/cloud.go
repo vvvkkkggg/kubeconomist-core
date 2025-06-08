@@ -2,6 +2,7 @@ package yandex
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/resourcemanager/v1"
 )
@@ -51,4 +52,35 @@ func (c *Client) GetFolders(ctx context.Context, cloudID string) ([]*resourceman
 	}
 
 	return folders, nil
+}
+
+func (c *Client) GetAllFolders(ctx context.Context, cloudID, folderID string) ([]*resourcemanager.Folder, error) {
+	if folderID != "" {
+		folder, err := c.sdk.ResourceManager().Folder().Get(ctx, &resourcemanager.GetFolderRequest{
+			FolderId: folderID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to get folder %s: %w", folderID, err)
+		}
+
+		return []*resourcemanager.Folder{folder}, nil
+	}
+
+	clouds, err := c.GetClouds(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clouds: %w", err)
+	}
+
+	res := make([]*resourcemanager.Folder, 0)
+
+	for _, cloud := range clouds {
+		folders, err := c.GetFolders(ctx, cloud.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get folders %s: %w", cloud.Id, err)
+		}
+
+		res = append(res, folders...)
+	}
+
+	return res, nil
 }

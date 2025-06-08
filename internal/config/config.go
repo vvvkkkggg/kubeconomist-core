@@ -17,8 +17,10 @@ type (
 	}
 
 	AnalyzersConfig struct {
-		KRR KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
-		VPC VPCAnalyzerConfig `mapstructure:"vpc" validate:"required"`
+		KRR      KrrAnalyzerConfig `mapstructure:"krr" validate:"required"`
+		VPC      VPCAnalyzerConfig `mapstructure:"vpc" validate:"required"`
+		CloudID  string            `mapstructure:"cloud_id"`
+		FolderID string            `mapstructure:"folder_id"`
 	}
 
 	KrrAnalyzerConfig struct {

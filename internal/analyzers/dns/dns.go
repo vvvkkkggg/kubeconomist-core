@@ -18,9 +18,12 @@ type DNSOptimizer struct {
 	billing *billing.Billing
 
 	metric *prometheus.GaugeVec
+
+	cloudID  string
+	folderID string
 }
 
-func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing) *DNSOptimizer {
+func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing, cloudID, folderID string) *DNSOptimizer {
 	// Константный прайс 38.88 рублей за 1 DNS зону в месяц
 	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -33,9 +36,11 @@ func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing) *DNSOptimizer {
 	)
 
 	return &DNSOptimizer{
-		yandex:  ya,
-		billing: b,
-		metric:  m,
+		yandex:   ya,
+		billing:  b,
+		metric:   m,
+		cloudID:  cloudID,
+		folderID: folderID,
 	}
 }
 
@@ -54,40 +59,32 @@ func (n *DNSOptimizer) Run(ctx context.Context) {
 		default:
 		}
 
-		clouds, err := n.yandex.GetClouds(ctx)
+		folders, err := n.yandex.GetAllFolders(ctx, n.cloudID, n.folderID)
 		if err != nil {
-			slog.Error("get clouds err", slog.Any("err", err))
+			slog.Error("get folders err", slog.Any("err", err))
 			return
 		}
 
-		for _, cloud := range clouds {
-			folders, err := n.yandex.GetFolders(ctx, cloud.Id)
+		for _, folder := range folders {
+			zones, err := n.yandex.GetDNSZones(ctx, folder.Id)
 			if err != nil {
-				slog.Error("get folders err", slog.Any("err", err))
+				slog.Error("get dns zones err", slog.Any("err", err))
 				return
 			}
 
-			for _, folder := range folders {
-				zones, err := n.yandex.GetDNSZones(ctx, folder.Id)
+			for _, zone := range zones {
+				isUsed, err := n.yandex.IsDNSUsed(ctx, zone.Id)
 				if err != nil {
-					slog.Error("get dns zones err", slog.Any("err", err))
+					slog.Error("check dns zone empty err", slog.Any("err", err))
 					return
 				}
 
-				for _, zone := range zones {
-					isUsed, err := n.yandex.IsDNSUsed(ctx, zone.Id)
-					if err != nil {
-						slog.Error("check dns zone empty err", slog.Any("err", err))
-						return
-					}
-
-					n.metric.With(prometheus.Labels{
-						"cloud_id":  cloud.Id,
-						"folder_id": folder.Id,
-						"zone_id":   zone.Id,
-						"is_used":   strconv.FormatBool(isUsed),
-					}).Set(1)
-				}
+				n.metric.With(prometheus.Labels{
+					"cloud_id":  folder.CloudId,
+					"folder_id": folder.Id,
+					"zone_id":   zone.Id,
+					"is_used":   strconv.FormatBool(isUsed),
+				}).Set(1)
 			}
 		}
 	}

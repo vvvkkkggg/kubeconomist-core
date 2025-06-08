@@ -74,9 +74,12 @@ type NodeOptimizer struct {
 	nodeCostMetric   *prometheus.GaugeVec
 	nodeCoresMetric  *prometheus.GaugeVec
 	nodeMemoryMetric *prometheus.GaugeVec
+
+	cloudID  string
+	folderID string
 }
 
-func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOptimizer {
+func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing, cloudID, folderID string) *NodeOptimizer {
 	nodeCostMetric := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
@@ -113,6 +116,9 @@ func NewNodeOptimizer(yandex *yandex.Client, billing *billing.Billing) *NodeOpti
 		nodeCostMetric:   nodeCostMetric,
 		nodeCoresMetric:  nodeCoresMetric,
 		nodeMemoryMetric: nodeMemoryMetric,
+
+		cloudID:  cloudID,
+		folderID: folderID,
 	}
 }
 
@@ -143,104 +149,96 @@ func (n *NodeOptimizer) Run(ctx context.Context) {
 		default:
 		}
 
-		clouds, err := n.yandex.GetClouds(ctx)
+		folders, err := n.yandex.GetAllFolders(ctx, n.cloudID, n.folderID)
 		if err != nil {
-			slog.Error("get clouds err", slog.Any("err", err))
+			slog.Error("get folders err", slog.Any("err", err))
 			return
 		}
 
-		for _, cloud := range clouds {
-			folders, err := n.yandex.GetFolders(ctx, cloud.Id)
+		for _, folder := range folders {
+			instances, err := n.yandex.GetInstances(ctx, folder.Id)
 			if err != nil {
-				slog.Error("get folders err", slog.Any("err", err))
+				slog.Error("get instances err", slog.Any("err", err))
 				return
 			}
 
-			for _, folder := range folders {
-				instances, err := n.yandex.GetInstances(ctx, folder.Id)
+			for _, instance := range instances {
+				coreFraction := instance.GetResources().GetCoreFraction()
+				cores := instance.GetResources().GetCores()
+				memory := instance.GetResources().GetMemory()
+				platformID := instance.GetPlatformId()
+
+				// yandex monitoring does not export RAM usage
+				// localhost:8428 is hardcoded, need to use config
+				currentCPU, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("rate(cpu_usage{resource_id=\"%s\"}[1h])", instance.GetName()))
 				if err != nil {
-					slog.Error("get instances err", slog.Any("err", err))
-					return
+					fmt.Println(instance.GetName())
+					slog.Error("query prometheus err", slog.Any("err", err))
+					continue
 				}
 
-				for _, instance := range instances {
-					coreFraction := instance.GetResources().GetCoreFraction()
-					cores := instance.GetResources().GetCores()
-					memory := instance.GetResources().GetMemory()
-					platformID := instance.GetPlatformId()
-
-					// yandex monitoring does not export RAM usage
-					// localhost:8428 is hardcoded, need to use config
-					currentCPU, err := prom.QueryValue("http://localhost:8428", fmt.Sprintf("rate(cpu_usage{resource_id=\"%s\"}[1h])", instance.GetName()))
-					if err != nil {
-						fmt.Println(instance.GetName())
-						slog.Error("query prometheus err", slog.Any("err", err))
-						continue
-					}
-
-					minCPU := FindClosestCPU(platformID, int(coreFraction), currentCPU)
-					if minCPU == -1 {
-						slog.Error("find closest CPU err", slog.String("platform_id", instance.GetPlatformId()), slog.Int("core_fraction", int(instance.GetResources().GetCoreFraction())))
-						continue
-					}
-
-					currentPrice, err := n.billing.CalculatePrice(platformID, coreFraction, cores, memory)
-					if err != nil {
-						slog.Error("calculate price err", slog.Any("err", err))
-						continue
-					}
-
-					desiredPrice, err := n.billing.CalculatePrice(platformID, coreFraction, int64(minCPU), memory)
-					if err != nil {
-						slog.Error("calculate desired price err", slog.Any("err", err))
-						continue
-					}
-
-					n.nodeCostMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"current",
-					).Set(currentPrice)
-
-					n.nodeCostMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"desired",
-					).Set(desiredPrice)
-
-					n.nodeCoresMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"current",
-					).Set(float64(cores))
-
-					n.nodeCoresMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"desired",
-					).Set(float64(minCPU))
-
-					// Convert memory from bytes to gigabytes
-					memoryGB := float64(memory) / (1024 * 1024 * 1024)
-
-					n.nodeMemoryMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"current",
-					).Set(memoryGB)
-
-					n.nodeMemoryMetric.WithLabelValues(
-						cloud.Id,
-						folder.Id,
-						instance.GetName(),
-						"desired",
-					).Set(memoryGB)
+				minCPU := FindClosestCPU(platformID, int(coreFraction), currentCPU)
+				if minCPU == -1 {
+					slog.Error("find closest CPU err", slog.String("platform_id", instance.GetPlatformId()), slog.Int("core_fraction", int(instance.GetResources().GetCoreFraction())))
+					continue
 				}
+
+				currentPrice, err := n.billing.CalculatePrice(platformID, coreFraction, cores, memory)
+				if err != nil {
+					slog.Error("calculate price err", slog.Any("err", err))
+					continue
+				}
+
+				desiredPrice, err := n.billing.CalculatePrice(platformID, coreFraction, int64(minCPU), memory)
+				if err != nil {
+					slog.Error("calculate desired price err", slog.Any("err", err))
+					continue
+				}
+
+				n.nodeCostMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"current",
+				).Set(currentPrice)
+
+				n.nodeCostMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"desired",
+				).Set(desiredPrice)
+
+				n.nodeCoresMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"current",
+				).Set(float64(cores))
+
+				n.nodeCoresMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"desired",
+				).Set(float64(minCPU))
+
+				// Convert memory from bytes to gigabytes
+				memoryGB := float64(memory) / (1024 * 1024 * 1024)
+
+				n.nodeMemoryMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"current",
+				).Set(memoryGB)
+
+				n.nodeMemoryMetric.WithLabelValues(
+					folder.CloudId,
+					folder.Id,
+					instance.GetName(),
+					"desired",
+				).Set(memoryGB)
 			}
 		}
 	}

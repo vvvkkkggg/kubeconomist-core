@@ -1,0 +1,36 @@
+# HELP kubeconomist_storage_optimizer_storage_optimization_price Price of the storage
+# TYPE kubeconomist_storage_optimizer_storage_optimization_price gauge
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="prod-logs", status="current"} 0.028
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="prod-logs", status="desired"} 0.022
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="backup-data", status="current"} 0.015
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="backup-data", status="desired"} 0.011
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="archive", status="current"} 0.006
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", bucket_name="archive", status="desired"} 0.004
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="dev-storage", status="current"} 0.025
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="dev-storage", status="desired"} 0.019
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="analytics", status="current"} 0.018
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="analytics", status="desired"} 0.013
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="cold-backups", status="current"} 0.012
+kubeconomist_storage_optimizer_storage_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", bucket_name="cold-backups", status="desired"} 0.008
+
+# HELP kubeconomist_storage_optimizer_storage_optimization_class_is_optimal Desired storage class for the bucket
+# TYPE kubeconomist_storage_optimizer_storage_optimization_class_is_optimal gauge
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo2f4l0mno5p6r8s9t1", bucket_name="prod-app-logs", storage_class="STANDARD"} 1
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo2f4l0mno5p6r8s9t1", bucket_name="prod-app-logs", storage_class="COLD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo2f4l0mno5p6r8s9t1", bucket_name="prod-app-logs", storage_class="ICE"} 0
+
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo3g5m1npq6r9s0t2u3", bucket_name="monthly-backups", storage_class="STANDARD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo3g5m1npq6r9s0t2u3", bucket_name="monthly-backups", storage_class="COLD"} 1
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo3g5m1npq6r9s0t2u3", bucket_name="monthly-backups", storage_class="ICE"} 0
+
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo4h6n2oqr7s0t1u4v5", bucket_name="legal-archive", storage_class="STANDARD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo4h6n2oqr7s0t1u4v5", bucket_name="legal-archive", storage_class="COLD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo4h6n2oqr7s0t1u4v5", bucket_name="legal-archive", storage_class="ICE"} 1
+
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo5i7o3prs8t1u2v6w7", bucket_name="dev-ci-artifacts", storage_class="STANDARD"} 1
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo5i7o3prs8t1u2v6w7", bucket_name="dev-ci-artifacts", storage_class="COLD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo5i7o3prs8t1u2v6w7", bucket_name="dev-ci-artifacts", storage_class="ICE"} 0
+
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo6j8p4qst9u2v3w8x8", bucket_name="media-assets", storage_class="STANDARD"} 1
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo6j8p4qst9u2v3w8x8", bucket_name="media-assets", storage_class="COLD"} 0
+kubeconomist_storage_optimizer_storage_optimization_class_is_optimal{cloud_id="b1g9vm8flkq4b6e0g3n2", folder_id="fo6j8p4qst9u2v3w8x8", bucket_name="media-assets", storage_class="ICE"} 0

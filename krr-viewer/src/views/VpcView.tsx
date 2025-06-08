@@ -1,69 +1,41 @@
-import React, { useState } from 'react';
+import { unparse } from 'papaparse';
+import React, { useMemo, useState } from 'react';
 import { SortableHeader } from '../components/SortableHeader';
-import { SubHeaderTabs } from '../components/SubHeaderTabs';
-import { mockSubnetRecommendations } from '../data/subnet-mock-data';
+import { ViewHeader } from '../components/ViewHeader';
 import { mockVpcRecommendations } from '../data/vpc-mock-data';
 import { useSort } from '../hooks/useSort';
-import type { SubnetRecommendation, VpcRecommendation } from '../types';
+import type { VpcRecommendation } from '../types';
 
-const TABS = ['Unused IPs', 'Subnet Utilization'];
+const FolderLink: React.FC<{ folderId: string }> = ({ folderId }) => (
+    <a href={`https://console.yandex.cloud/folders/${folderId}`} target="_blank" rel="noopener noreferrer">
+      {folderId}
+    </a>
+);
 
-const UnusedIpsTable: React.FC<{ items: VpcRecommendation[] }> = ({ items }) => {
-    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(items, 'severity', 'descending');
-    const sortProps = { currentSortKey: sortKey, direction: sortDirection, onRequestSort: requestSort };
+const VpcTable: React.FC<{ items: VpcRecommendation[] }> = ({ items }) => {
+    const { items: sortedRecs, requestSort, sortKey: currentSortKey, sortDirection } = useSort(items, 'ipAddress', 'ascending');
+    const sortProps = { currentSortKey, direction: sortDirection, onRequestSort: requestSort };
 
     return (
         <div className="table-container">
             <table>
                 <thead>
                     <tr>
+                        <SortableHeader sortKey="cloudId" {...sortProps}>Cloud ID</SortableHeader>
+                        <SortableHeader sortKey="folderId" {...sortProps}>Folder ID</SortableHeader>
                         <SortableHeader sortKey="ipAddress" {...sortProps}>IP Address</SortableHeader>
-                        <SortableHeader sortKey="resourceName" {...sortProps}>Resource Name</SortableHeader>
-                        <SortableHeader sortKey="region" {...sortProps}>Region</SortableHeader>
-                        <SortableHeader sortKey="unusedForDays" {...sortProps}>Unused For (Days)</SortableHeader>
-                        <SortableHeader sortKey="severity" {...sortProps}>Severity</SortableHeader>
+                        <SortableHeader sortKey="isUsed" {...sortProps}>Is Used</SortableHeader>
+                        <SortableHeader sortKey="isReserved" {...sortProps}>Is Reserved</SortableHeader>
                     </tr>
                 </thead>
                 <tbody>
                     {sortedRecs.map((rec) => (
                         <tr key={rec.id}>
+                            <td>{rec.cloudId}</td>
+                            <td><FolderLink folderId={rec.folderId} /></td>
                             <td>{rec.ipAddress}</td>
-                            <td>{rec.resourceName}</td>
-                            <td>{rec.region}</td>
-                            <td>{rec.unusedForDays}</td>
-                            <td><span className={`severity-pill severity-${rec.severity.toLowerCase()}`}>{rec.severity}</span></td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-}
-
-const SubnetUtilizationTable: React.FC<{ items: SubnetRecommendation[] }> = ({ items }) => {
-    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(items, 'utilization', 'descending');
-    const sortProps = { currentSortKey: sortKey, direction: sortDirection, onRequestSort: requestSort };
-
-    return (
-        <div className="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <SortableHeader sortKey="subnetId" {...sortProps}>Subnet ID</SortableHeader>
-                        <SortableHeader sortKey="cidrBlock" {...sortProps}>CIDR Block</SortableHeader>
-                        <SortableHeader sortKey="region" {...sortProps}>Region</SortableHeader>
-                        <SortableHeader sortKey="utilization" {...sortProps}>Utilization (%)</SortableHeader>
-                        <SortableHeader sortKey="severity" {...sortProps}>Severity</SortableHeader>
-                    </tr>
-                </thead>
-                <tbody>
-                    {sortedRecs.map((rec) => (
-                        <tr key={rec.id}>
-                            <td>{rec.subnetId}</td>
-                            <td>{rec.cidrBlock}</td>
-                            <td>{rec.region}</td>
-                            <td>{rec.utilization.toFixed(1)}</td>
-                            <td><span className={`severity-pill severity-${rec.severity.toLowerCase()}`}>{rec.severity}</span></td>
+                            <td>{rec.isUsed ? 'Yes' : 'No'}</td>
+                            <td>{rec.isReserved ? 'Yes' : 'No'}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -73,15 +45,49 @@ const SubnetUtilizationTable: React.FC<{ items: SubnetRecommendation[] }> = ({ i
 }
 
 export const VpcView: React.FC = () => {
-    const [activeTab, setActiveTab] = useState(TABS[0]);
-    const count = activeTab === TABS[0] ? mockVpcRecommendations.length : mockSubnetRecommendations.length;
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredRecs = useMemo(() => {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        // The user only cares about reserved IPs that are not being used.
+        return mockVpcRecommendations.filter(rec =>
+            rec.isReserved && !rec.isUsed && (
+                rec.cloudId.toLowerCase().includes(lowerCaseQuery) ||
+                rec.folderId.toLowerCase().includes(lowerCaseQuery) ||
+                rec.ipAddress.toLowerCase().includes(lowerCaseQuery)
+            )
+        );
+    }, [searchQuery]);
+
+    const handleExport = () => {
+        const dataToExport = filteredRecs.map(rec => ({
+            'Cloud ID': rec.cloudId,
+            'Folder ID': rec.folderId,
+            'IP Address': rec.ipAddress,
+            'Is Used': rec.isUsed ? 'Yes' : 'No',
+            'Is Reserved': rec.isReserved ? 'Yes' : 'No',
+        }));
+
+        const csv = unparse(dataToExport);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `vpc-unused-ips-report.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div>
-            <h2 className="view-header">VPC Recommendations ({count})</h2>
-            <SubHeaderTabs tabs={TABS} activeTab={activeTab} onTabClick={setActiveTab} />
-            {activeTab === TABS[0] && <UnusedIpsTable items={mockVpcRecommendations} />}
-            {activeTab === TABS[1] && <SubnetUtilizationTable items={mockSubnetRecommendations} />}
+            <h2 className="view-header">Unused Reserved IP Addresses ({filteredRecs.length})</h2>
+            <ViewHeader
+                onSearch={setSearchQuery}
+                onHideEmptyToggle={() => {}}
+                showHideEmpty={false}
+                onExport={handleExport}
+            />
+            <VpcTable items={filteredRecs} />
         </div>
     );
 }; 

@@ -1,10 +1,10 @@
-import { Download, Search } from 'lucide-react';
 import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
 import { RecommendationsTable } from '../components/RecommendationsTable';
+import { ViewHeader } from '../components/ViewHeader';
 import { mockReports } from '../data/mock-data';
 import { useSort } from '../hooks/useSort';
-import type { KrrReport, Scan } from '../types';
+import type { KrrReport } from '../types';
 
 function formatDate(iso: string) {
     return new Date(iso).toLocaleString(undefined, {
@@ -17,17 +17,26 @@ function formatDate(iso: string) {
     });
 }
 
-const KrrHeader: React.FC<{
-    onSearch: (query: string) => void;
-    onHideEmptyToggle: (hidden: boolean) => void;
-    scans: Scan[];
-    reports: KrrReport[];
-    selectedReport: KrrReport;
-    onReportChange: (report: KrrReport) => void;
-}> = ({ onSearch, onHideEmptyToggle, scans, reports, selectedReport, onReportChange }) => {
+export const KrrView: React.FC = () => {
+    const [selectedReport, setSelectedReport] = useState<KrrReport>(mockReports[0]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [hideEmpty, setHideEmpty] = useState(false);
+
+    const scans = useMemo(() => {
+        let scans = selectedReport.scans;
+        if (hideEmpty) {
+            scans = scans.filter(s => s.severity !== 'UNKNOWN' && s.recommended.requests.cpu.value !== '?');
+        }
+        if (searchQuery) {
+            scans = scans.filter(s => s.object.container.toLowerCase().includes(searchQuery.toLowerCase()))
+        }
+        return scans;
+    }, [selectedReport, searchQuery, hideEmpty]);
+
+    const { items: sortedScans, requestSort, sortKey, sortDirection } = useSort(scans, 'severity', 'descending');
 
     const handleExport = () => {
-        const dataToExport = scans.map(s => ({
+        const dataToExport = sortedScans.map(s => ({
             Name: s.object.name,
             Namespace: s.object.namespace,
             Kind: s.object.kind,
@@ -48,61 +57,20 @@ const KrrHeader: React.FC<{
         document.body.removeChild(link);
     }
 
-    return (
-        <div className="krr-header">
-            <div className="controls-left">
-                <div className="search-container">
-                    <Search size={18} />
-                    <input type="text" placeholder="Type to search" onChange={(e) => onSearch(e.target.value)} />
-                </div>
-                <label className="checkbox-container">
-                    <input type="checkbox" onChange={(e) => onHideEmptyToggle(e.target.checked)} />
-                    Hide empty recommendations
-                </label>
-            </div>
-            <div className="controls-right">
-                <select className="scan-date-select" value={selectedReport.date} onChange={(e) => onReportChange(reports.find(r => r.date === e.target.value)!)}>
-                    {reports.map(r => <option key={r.date} value={r.date}>Scan date: {formatDate(r.date)}</option>)}
-                </select>
-                <button className="export-button" onClick={handleExport}>
-                    <Download size={16} />
-                    Export CSV
-                </button>
-            </div>
-        </div>
+    const scanDateSelect = (
+        <select className="scan-date-select" value={selectedReport.date} onChange={(e) => setSelectedReport(mockReports.find(r => r.date === e.target.value)!)}>
+            {mockReports.map(r => <option key={r.date} value={r.date}>Scan date: {formatDate(r.date)}</option>)}
+        </select>
     );
-};
-
-
-export const KrrView: React.FC = () => {
-    const [selectedReport, setSelectedReport] = useState<KrrReport>(mockReports[0]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [hideEmpty, setHideEmpty] = useState(false);
-
-    const scans = useMemo(() => {
-        let scans = selectedReport.scans;
-        if (hideEmpty) {
-            scans = scans.filter(s => s.severity !== 'UNKNOWN' && s.recommended.requests.cpu.value !== '?');
-        }
-        if (searchQuery) {
-            scans = scans.filter(s => s.object.container.toLowerCase().includes(searchQuery.toLowerCase()))
-        }
-        return scans;
-    }, [selectedReport, searchQuery, hideEmpty]);
-
-    const { items: sortedScans, requestSort, sortKey, sortDirection } = useSort(scans, 'severity', 'descending');
-
 
     return (
         <div>
             <h2 className="view-header">Recommendations ({sortedScans.length})</h2>
-            <KrrHeader
+            <ViewHeader
                 onSearch={setSearchQuery}
                 onHideEmptyToggle={setHideEmpty}
-                scans={sortedScans}
-                reports={mockReports}
-                selectedReport={selectedReport}
-                onReportChange={setSelectedReport}
+                onExport={handleExport}
+                scanDateSelect={scanDateSelect}
             />
             <RecommendationsTable
                 scans={sortedScans}

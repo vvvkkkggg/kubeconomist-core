@@ -36,6 +36,8 @@ export interface Scan {
   severity: string;
 }
 
+export type Severity = "CRITICAL" | "WARNING" | "OK" | "GOOD" | "UNKNOWN";
+
 export interface KrrReport {
   scans: Scan[];
   score: number;
@@ -49,11 +51,11 @@ export interface KrrReport {
 
 export interface VpcRecommendation {
   id: string;
+  cloudId: string;
+  folderId: string;
   ipAddress: string;
-  resourceName: string;
-  region: string;
-  unusedForDays: number;
-  severity: 'WARNING' | 'CRITICAL';
+  isUsed: boolean;
+  isReserved: boolean;
 }
 
 export type StorageRecommendation = {
@@ -63,7 +65,7 @@ export type StorageRecommendation = {
   region: string;
   storageClass: 'Standard' | 'Glacier' | 'Deep Archive';
   potentialSavings: number;
-  severity: 'OK' | 'WARNING' | 'CRITICAL';
+  severity: Severity;
 } | {
   id: string;
   type: 'Block Storage';
@@ -71,7 +73,7 @@ export type StorageRecommendation = {
   instanceId: string;
   currentSizeGB: number;
   recommendedSizeGB: number;
-  severity: 'OK' | 'WARNING' | 'CRITICAL';
+  severity: Severity;
 };
 
 export interface RegistryRecommendation {
@@ -80,16 +82,38 @@ export interface RegistryRecommendation {
     tags: string[];
     sizeMB: number;
     lastUsed: string;
-    severity: 'WARNING' | 'CRITICAL';
+    severity: Severity;
 }
 
-export interface SubnetRecommendation {
-    id: string;
-    subnetId: string;
-    cidrBlock: string;
-    region: string;
-    totalIps: number;
-    usedIps: number;
-    utilization: number;
-    severity: 'OK' | 'WARNING' | 'CRITICAL';
-} 
+export interface DnsRecommendation {
+    id: string; // zone_id
+    cloudId: string;
+    folderId: string;
+    zoneId: string;
+    isUsed: boolean;
+}
+
+export interface NodeOptimizerRecommendation {
+  id: string; // instance_id
+  cloudId: string;
+  folderId: string;
+  instanceId: string;
+  currentCores: number;
+  desiredCores: number;
+  currentMemoryGB: number;
+  desiredMemoryGB: number;
+  currentPrice: number;
+  desiredPrice: number;
+}
+
+export interface PlatformOptimizerRecommendation {
+  id: string; // node_group_id
+  cloudId: string;
+  folderId: string;
+  nodeGroupId: string;
+  currentPlatform: string;
+  desiredPlatform: string;
+  currentPrice: number;
+  desiredPrice: number;
+  savings: number;
+}

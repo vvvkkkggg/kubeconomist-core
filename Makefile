@@ -28,3 +28,6 @@ python-init:
 
 python-run:
 	python tools/gen-metrics.py
+
+setup-front:
+	cd krr-viewer && npm install && npm run dev

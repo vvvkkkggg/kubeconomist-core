@@ -57,7 +57,7 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 	// 	panic(err)
 	// }
 
-	krrStats, err := k.loadReport(fileName)
+	krrStats, err := k.loadReport(reportName)
 	if err != nil {
 		panic(err)
 	}

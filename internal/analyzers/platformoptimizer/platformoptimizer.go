@@ -25,8 +25,8 @@ func NewPlatformOptimizer(ya *yandex.Client, b *billing.Billing) *PlatformOptimi
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "node_optimizer",
-			Name:      "node_optimization_status",
-			Help:      "Status of node optimization",
+			Name:      "node_optimization_price",
+			Help:      "Price of the node",
 		},
 		[]string{"cloud_id", "folder_id", "node_group_id", "platform_id", "status"},
 	)

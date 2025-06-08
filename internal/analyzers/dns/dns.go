@@ -25,8 +25,8 @@ func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing) *DNSOptimizer {
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "dns_optimizer",
-			Name:      "dns_optimization_status",
-			Help:      "Status of DNS optimization",
+			Name:      "dns_optimization_zone_not_empty",
+			Help:      "Is DNS zone not empty",
 		},
 		[]string{"cloud_id", "folder_id", "zone_id"},
 	)

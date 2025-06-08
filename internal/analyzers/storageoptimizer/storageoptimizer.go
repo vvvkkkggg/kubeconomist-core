@@ -34,8 +34,8 @@ func NewStorageOptimizer(yandex *yandex.Client, billing *billing.Billing) *Stora
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "storage_optimizer",
-			Name:      "storage_optimization_status",
-			Help:      "Status of storage optimization",
+			Name:      "storage_optimization_price",
+			Help:      "Price of the storage",
 		},
 		[]string{"cloud_id", "folder_id", "bucket_name", "status"},
 	)
@@ -44,7 +44,7 @@ func NewStorageOptimizer(yandex *yandex.Client, billing *billing.Billing) *Stora
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "storage_optimizer",
-			Name:      "storage_class",
+			Name:      "storage_optimization_class_is_optimal",
 			Help:      "Desired storage class for the bucket",
 		},
 		[]string{"cloud_id", "folder_id", "bucket_name", "storage_class"},

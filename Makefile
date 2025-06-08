@@ -17,3 +17,6 @@ env-up:
 
 env-down:
 	docker compose -f test/docker-compose.yml down
+
+push-metrics:
+	curl -X POST --data-binary @metrics.prom http://localhost:8428/api/v1/import/prometheus

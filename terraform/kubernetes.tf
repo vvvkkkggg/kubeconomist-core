@@ -14,36 +14,35 @@
 #   network_policy_provider = "CALICO"
 # }
 
-# resource "yandex_kubernetes_node_group" "node_group" {
-#   cluster_id = yandex_kubernetes_cluster.k8s.id
-#   name       = "k8s-demo"
-#   version    = "1.28"
-#   instance_template {
-#     platform_id = "standard-v3"
-#     resources {
-#       memory = 4
-#       cores  = 2
-#     }
-#     boot_disk {
-#       size = 50
-#     }
-#     network_interface {
-#       subnet_ids = [var.subnet_id]
-#       nat        = true
-#     }
-#   }
-#   scale_policy {
-#     fixed_scale {
-#       size = 2
-#     }
-#   }
-#   allocation_policy {
-#     location {
-#       zone = var.zone
-#     }
-#   }
-#   service_account_id = var.k8s_node_sa_id
-# }
+resource "yandex_kubernetes_node_group" "node_group" {
+  cluster_id = "catjf4lqjrdc4u4cbepj"
+  name       = "k8s-demo"
+  version    = "1.32"
+  instance_template {
+    platform_id = "standard-v1"
+    resources {
+      memory = 4
+      cores  = 4
+    }
+    boot_disk {
+      size = 64
+    }
+    network_interface {
+      subnet_ids = ["e9brgdgjst6qe6tp1oak"]
+      nat        = true
+    }
+  }
+  scale_policy {
+    fixed_scale {
+      size = 1
+    }
+  }
+  allocation_policy {
+    location {
+      zone = var.zone
+    }
+  }
+}
 
 # resource "yandex_kubernetes_addon" "prometheus" {
 #   cluster_id = yandex_kubernetes_cluster.k8s.id
@@ -54,6 +53,7 @@
 #   }
 # }
 
-# resource "yandex_container_registry" "registry" {
-#   name = "alkosenko-registry"
-# }
+resource "yandex_container_registry" "registry" {
+  name = "alkosenko-registry"
+  folder_id = var.folder_id
+}

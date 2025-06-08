@@ -1,16 +1,13 @@
 import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
+import { CloudLink } from '../components/CloudLink';
+import { FolderLink } from '../components/FolderLink';
+import { InstanceGroupLink } from '../components/InstanceGroupLink';
 import { SortableHeader } from '../components/SortableHeader';
 import { ViewHeader } from '../components/ViewHeader';
 import { mockPlatformOptimizerRecommendations } from '../data/platform-optimizer-mock-data';
 import { useSort } from '../hooks/useSort';
 import type { PlatformOptimizerRecommendation } from '../types';
-
-const FolderLink: React.FC<{ folderId: string }> = ({ folderId }) => (
-  <a href={`https://console.yandex.cloud/folders/${folderId}`} target="_blank" rel="noopener noreferrer">
-    {folderId}
-  </a>
-);
 
 export const PlatformOptimizerView: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -45,9 +42,9 @@ export const PlatformOptimizerView: React.FC = () => {
             'Folder ID': rec.folderId,
             'Current Platform': rec.currentPlatform,
             'Desired Platform': rec.desiredPlatform,
-            'Current Monthly Cost ($)': rec.currentPrice,
-            'Desired Monthly Cost ($)': rec.desiredPrice,
-            'Monthly Savings ($)': rec.savings,
+            'Current Monthly Cost (₽)': rec.currentPrice,
+            'Desired Monthly Cost (₽)': rec.desiredPrice,
+            'Monthly Savings (₽)': rec.savings,
         }));
         const csv = unparse(dataToExport);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -77,16 +74,16 @@ export const PlatformOptimizerView: React.FC = () => {
                             <SortableHeader<PlatformOptimizerRecommendation> sortKey="folderId" {...sortProps}>Folder ID</SortableHeader>
                             <SortableHeader<PlatformOptimizerRecommendation> sortKey="currentPlatform" {...sortProps}>Current Platform</SortableHeader>
                             <SortableHeader<PlatformOptimizerRecommendation> sortKey="desiredPlatform" {...sortProps}>Desired Platform</SortableHeader>
-                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="currentPrice" {...sortProps}>Current Cost ($)</SortableHeader>
-                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="desiredPrice" {...sortProps}>Desired Cost ($)</SortableHeader>
-                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="savings" {...sortProps}>Savings ($)</SortableHeader>
+                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="currentPrice" {...sortProps}>Current Cost (₽)</SortableHeader>
+                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="desiredPrice" {...sortProps}>Desired Cost (₽)</SortableHeader>
+                            <SortableHeader<PlatformOptimizerRecommendation> sortKey="savings" {...sortProps}>Savings (₽)</SortableHeader>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedRecs.map((rec: PlatformOptimizerRecommendation) => (
                             <tr key={rec.id}>
-                                <td>{rec.nodeGroupId}</td>
-                                <td>{rec.cloudId}</td>
+                                <td><InstanceGroupLink folderId={rec.folderId} nodeGroupId={rec.nodeGroupId} /></td>
+                                <td><CloudLink cloudId={rec.cloudId} /></td>
                                 <td><FolderLink folderId={rec.folderId} /></td>
                                 <td>{rec.currentPlatform}</td>
                                 <td>{rec.desiredPlatform}</td>

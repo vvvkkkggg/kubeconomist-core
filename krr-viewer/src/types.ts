@@ -17,6 +17,7 @@ export interface Recommended {
 export interface Scan {
   object: {
     cluster: string;
+    clusterId: string;
     name: string;
     container: string;
     namespace: string;
@@ -104,6 +105,7 @@ export interface NodeOptimizerRecommendation {
   desiredMemoryGB: number;
   currentPrice: number;
   desiredPrice: number;
+  savings: number;
 }
 
 export interface PlatformOptimizerRecommendation {

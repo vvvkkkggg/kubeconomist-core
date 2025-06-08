@@ -10,19 +10,25 @@ const SeverityPill: React.FC<{ severity: string }> = ({ severity }) => {
   return <span className={`severity-pill severity-${lowerSeverity}`}>{severity}</span>;
 };
 
-interface RecommendationsTableProps {
-  scans: Scan[];
-  requestSort: (key: string) => void;
-  sortKey: string;
+const PodLink: React.FC<{ scan: Scan, children: React.ReactNode }> = ({ scan, children }) => {
+    const folderId = "b1g8enqi42dal6t489ou"; // This should ideally come from a config or context
+    const url = `https://console.yandex.cloud/folders/${folderId}/managed-kubernetes/cluster/${scan.object.clusterId}/pod?id=${scan.object.namespace}:${scan.object.name}`;
+    return <a href={url} target="_blank" rel="noopener noreferrer" className="btn">{children}</a>;
+}
+
+interface RecommendationsTableProps<T extends Scan> {
+  scans: T[];
+  requestSort: (key: keyof T) => void;
+  sortKey: keyof T;
   sortDirection: SortDirection;
 }
 
-export const RecommendationsTable: React.FC<RecommendationsTableProps> = ({
+export const RecommendationsTable = <T extends Scan>({
   scans,
   requestSort,
   sortKey,
   sortDirection,
-}) => {
+}: RecommendationsTableProps<T>) => {
   const sortProps = {
     currentSortKey: sortKey,
     direction: sortDirection,
@@ -34,19 +40,20 @@ export const RecommendationsTable: React.FC<RecommendationsTableProps> = ({
       <table>
         <thead>
           <tr>
-            <SortableHeader sortKey="object.name" {...sortProps}>Name</SortableHeader>
-            <SortableHeader sortKey="object.namespace" {...sortProps}>Namespace</SortableHeader>
-            <SortableHeader sortKey="object.kind" {...sortProps}>Kind</SortableHeader>
-            <SortableHeader sortKey="object.container" {...sortProps}>Container</SortableHeader>
-            <SortableHeader sortKey="severity" {...sortProps}>Severity</SortableHeader>
+            <SortableHeader<T> sortKey={'object.name' as keyof T} {...sortProps}>Name</SortableHeader>
+            <SortableHeader<T> sortKey={'object.namespace' as keyof T} {...sortProps}>Namespace</SortableHeader>
+            <SortableHeader<T> sortKey={'object.kind' as keyof T} {...sortProps}>Kind</SortableHeader>
+            <SortableHeader<T> sortKey={'object.container' as keyof T} {...sortProps}>Container</SortableHeader>
+            <SortableHeader<T> sortKey={'severity' as keyof T} {...sortProps}>Severity</SortableHeader>
             <th>Mem (Req)</th>
             <th>Mem (Lim)</th>
             <th>CPU (Req)</th>
             <th>CPU (Lim)</th>
+            <th>КНОПКА</th>
           </tr>
         </thead>
         <tbody>
-          {scans.map((scan: Scan, index: number) => (
+          {scans.map((scan: T, index: number) => (
             <tr key={`${scan.object.name}-${scan.object.container}-${index}`}>
               <td>{scan.object.name}</td>
               <td>{scan.object.namespace}</td>
@@ -82,6 +89,9 @@ export const RecommendationsTable: React.FC<RecommendationsTableProps> = ({
                   recommended={scan.recommended.limits.cpu.value}
                   formatter={format.formatCPU}
                 />
+              </td>
+              <td>
+                <PodLink scan={scan}>Изменить</PodLink>
               </td>
             </tr>
           ))}

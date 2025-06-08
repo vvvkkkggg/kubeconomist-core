@@ -1,16 +1,12 @@
 import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
+import { CloudLink } from '../components/CloudLink';
+import { FolderLink } from '../components/FolderLink';
 import { SortableHeader } from '../components/SortableHeader';
 import { ViewHeader } from '../components/ViewHeader';
 import { mockDnsRecommendations } from '../data/dns-mock-data';
 import { useSort } from '../hooks/useSort';
 import type { DnsRecommendation } from '../types';
-
-const FolderLink: React.FC<{ folderId: string }> = ({ folderId }) => (
-    <a href={`https://console.yandex.cloud/folders/${folderId}`} target="_blank" rel="noopener noreferrer">
-        {folderId}
-    </a>
-);
 
 export const DnsView: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -74,7 +70,7 @@ export const DnsView: React.FC = () => {
                         {sortedRecs.map((rec: DnsRecommendation) => (
                             <tr key={rec.id}>
                                 <td>{rec.zoneId}</td>
-                                <td>{rec.cloudId}</td>
+                                <td><CloudLink cloudId={rec.cloudId} /></td>
                                 <td><FolderLink folderId={rec.folderId} /></td>
                             </tr>
                         ))}

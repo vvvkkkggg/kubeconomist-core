@@ -2,9 +2,9 @@ import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
 import { RecommendationsTable } from '../components/RecommendationsTable';
 import { ViewHeader } from '../components/ViewHeader';
-import { mockReports } from '../data/mock-data';
+import { krrReport } from '../data/krr-mock-data';
 import { useSort } from '../hooks/useSort';
-import type { KrrReport } from '../types';
+import type { Scan } from '../types';
 
 function formatDate(iso: string) {
     return new Date(iso).toLocaleString(undefined, {
@@ -18,22 +18,35 @@ function formatDate(iso: string) {
 }
 
 export const KrrView: React.FC = () => {
-    const [selectedReport, setSelectedReport] = useState<KrrReport>(mockReports[0]);
     const [searchQuery, setSearchQuery] = useState('');
     const [hideEmpty, setHideEmpty] = useState(false);
+    const [showSavingsOnly, setShowSavingsOnly] = useState(true);
 
     const scans = useMemo(() => {
-        let scans = selectedReport.scans;
+        let scans = krrReport.scans;
         if (hideEmpty) {
             scans = scans.filter(s => s.severity !== 'UNKNOWN' && s.recommended.requests.cpu.value !== '?');
+        }
+        if (showSavingsOnly) {
+            scans = scans.filter(s => {
+                const cpuReq = s.recommended.requests.cpu.value;
+                const memReq = s.recommended.requests.memory.value;
+                if (typeof cpuReq === 'number' && typeof s.object.allocations.requests.cpu === 'number' && cpuReq < s.object.allocations.requests.cpu) {
+                    return true;
+                }
+                if (typeof memReq === 'number' && typeof s.object.allocations.requests.memory === 'number' && memReq < s.object.allocations.requests.memory) {
+                    return true;
+                }
+                return false;
+            })
         }
         if (searchQuery) {
             scans = scans.filter(s => s.object.container.toLowerCase().includes(searchQuery.toLowerCase()))
         }
         return scans;
-    }, [selectedReport, searchQuery, hideEmpty]);
+    }, [searchQuery, hideEmpty, showSavingsOnly]);
 
-    const { items: sortedScans, requestSort, sortKey, sortDirection } = useSort(scans, 'severity', 'descending');
+    const { items: sortedScans, requestSort, sortKey, sortDirection } = useSort<Scan>(scans, 'severity', 'descending');
 
     const handleExport = () => {
         const dataToExport = sortedScans.map(s => ({
@@ -57,12 +70,6 @@ export const KrrView: React.FC = () => {
         document.body.removeChild(link);
     }
 
-    const scanDateSelect = (
-        <select className="scan-date-select" value={selectedReport.date} onChange={(e) => setSelectedReport(mockReports.find(r => r.date === e.target.value)!)}>
-            {mockReports.map(r => <option key={r.date} value={r.date}>Scan date: {formatDate(r.date)}</option>)}
-        </select>
-    );
-
     return (
         <div>
             <h2 className="view-header">Recommendations ({sortedScans.length})</h2>
@@ -70,7 +77,8 @@ export const KrrView: React.FC = () => {
                 onSearch={setSearchQuery}
                 onHideEmptyToggle={setHideEmpty}
                 onExport={handleExport}
-                scanDateSelect={scanDateSelect}
+                onShowSavingsOnlyToggle={setShowSavingsOnly}
+                showSavingsOnly={true}
             />
             <RecommendationsTable
                 scans={sortedScans}

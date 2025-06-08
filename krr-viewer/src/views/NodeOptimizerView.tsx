@@ -1,5 +1,8 @@
 import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
+import { CloudLink } from '../components/CloudLink';
+import { FolderLink } from '../components/FolderLink';
+import { InstanceLink } from '../components/InstanceLink';
 import { SortableHeader } from '../components/SortableHeader';
 import { ViewHeader } from '../components/ViewHeader';
 import { mockNodeOptimizerRecommendations } from '../data/node-optimizer-mock-data';
@@ -10,7 +13,10 @@ export const NodeOptimizerView: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const optimizableRecs = useMemo(() => {
-        return mockNodeOptimizerRecommendations.filter((rec: NodeOptimizerRecommendation) => rec.currentPrice > rec.desiredPrice);
+        return mockNodeOptimizerRecommendations.map(rec => ({
+            ...rec,
+            savings: rec.currentPrice - rec.desiredPrice
+        })).filter((rec) => rec.savings > 0);
     }, []);
 
     const filteredRecs = useMemo(() => {
@@ -22,7 +28,7 @@ export const NodeOptimizerView: React.FC = () => {
         );
     }, [searchQuery, optimizableRecs]);
 
-    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(filteredRecs, 'instanceId', 'ascending');
+    const { items: sortedRecs, requestSort, sortKey, sortDirection } = useSort(filteredRecs, 'savings', 'descending');
 
     const sortProps = {
         currentSortKey: sortKey,
@@ -38,9 +44,9 @@ export const NodeOptimizerView: React.FC = () => {
             'Current Cores': rec.currentCores,
             'Desired Cores': rec.desiredCores,
             'Memory (GB)': rec.currentMemoryGB,
-            'Current Monthly Cost ($)': rec.currentPrice,
-            'Desired Monthly Cost ($)': rec.desiredPrice,
-            'Monthly Savings ($)': rec.currentPrice - rec.desiredPrice,
+            'Current Monthly Cost (₽)': rec.currentPrice,
+            'Desired Monthly Cost (₽)': rec.desiredPrice,
+            'Monthly Savings (₽)': rec.savings,
         }));
         const csv = unparse(dataToExport);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -71,9 +77,9 @@ export const NodeOptimizerView: React.FC = () => {
                             <SortableHeader sortKey="currentCores" {...sortProps}>Current Cores</SortableHeader>
                             <SortableHeader sortKey="desiredCores" {...sortProps}>Desired Cores</SortableHeader>
                             <SortableHeader sortKey="currentMemoryGB" {...sortProps}>Memory (GB)</SortableHeader>
-                            <SortableHeader sortKey="currentPrice" {...sortProps}>Current Cost ($)</SortableHeader>
-                            <SortableHeader sortKey="desiredPrice" {...sortProps}>Desired Cost ($)</SortableHeader>
-                            <SortableHeader sortKey="savings" {...sortProps}>Savings ($)</SortableHeader>
+                            <SortableHeader sortKey="currentPrice" {...sortProps}>Current Cost (₽)</SortableHeader>
+                            <SortableHeader sortKey="desiredPrice" {...sortProps}>Desired Cost (₽)</SortableHeader>
+                            <SortableHeader sortKey="savings" {...sortProps}>Savings (₽)</SortableHeader>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,9 +87,9 @@ export const NodeOptimizerView: React.FC = () => {
                             const savings = rec.currentPrice - rec.desiredPrice;
                             return (
                                 <tr key={rec.id}>
-                                    <td>{rec.instanceId}</td>
-                                    <td>{rec.cloudId}</td>
-                                    <td>{rec.folderId}</td>
+                                    <td><InstanceLink folderId={rec.folderId} instanceId={rec.instanceId} /></td>
+                                    <td><CloudLink cloudId={rec.cloudId} /></td>
+                                    <td><FolderLink folderId={rec.folderId} /></td>
                                     <td>{rec.currentCores}</td>
                                     <td>{rec.desiredCores}</td>
                                     <td>{rec.currentMemoryGB}</td>

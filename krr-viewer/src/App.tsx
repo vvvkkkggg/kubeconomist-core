@@ -38,7 +38,17 @@ function App() {
   return (
     <div className="app-container">
       <div className="sticky-header">
-        <h1 className="main-header">Kubeconomist</h1>
+        <div className="header-container">
+          <h1 className="main-header">Kubeconomist</h1>
+          <a
+            href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="adhd-button"
+          >
+            СДВГ КНОПКА
+          </a>
+        </div>
         <Tabs
           tabs={TABS}
           activeTab={activeTab}

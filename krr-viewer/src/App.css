@@ -206,4 +206,46 @@ tbody tr:last-child td {
 
 .sort-icon.active {
   color: white;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #4f4f4f;
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.btn:hover {
+    background-color: #5f5f5f;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.adhd-button {
+    background-color: white;
+    color: black;
+    border: 1px solid black;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9em;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.adhd-button:hover {
+    background-color: #eee;
 } 

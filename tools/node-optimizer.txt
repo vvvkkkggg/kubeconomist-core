@@ -1,0 +1,18 @@
+# HELP kubeconomist_node_optimizer_node_optimization_price Price of the node
+# TYPE kubeconomist_node_optimizer_node_optimization_price gauge
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", node_group_id="ng12345678", platform_id="standard-v1", status="current"} 0.028
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", node_group_id="ng12345678", platform_id="standard-v1", status="desired"} 0.021
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", node_group_id="ng23456789", platform_id="standard-v2", status="current"} 0.042
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", node_group_id="ng23456789", platform_id="standard-v2", status="desired"} 0.042
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", node_group_id="ng34567890", platform_id="memory-optimized", status="current"} 0.068
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", node_group_id="ng34567890", platform_id="memory-optimized", status="desired"} 0.055
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", node_group_id="ng45678901", platform_id="gpu-standard-v1", status="current"} 0.225
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", node_group_id="ng45678901", platform_id="gpu-standard-v1", status="desired"} 0.165
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", node_group_id="ng56789012", platform_id="standard-v1", status="current"} 0.019
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", node_group_id="ng56789012", platform_id="standard-v1", status="desired"} 0.016
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", node_group_id="ng67890123", platform_id="standard-v2", status="current"} 0.038
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", node_group_id="ng67890123", platform_id="standard-v2", status="desired"} 0.030
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", node_group_id="ng78901234", platform_id="gpu-standard-v1", status="current"} 0.285
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", node_group_id="ng78901234", platform_id="gpu-standard-v1", status="desired"} 0.195
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", node_group_id="ng89012345", platform_id="memory-optimized", status="current"} 0.052
+kubeconomist_node_optimizer_node_optimization_price{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", node_group_id="ng89012345", platform_id="memory-optimized", status="desired"} 0.052

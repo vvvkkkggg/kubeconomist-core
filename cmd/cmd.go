@@ -7,10 +7,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/nodeoptimizer"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/platformoptimizer"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/registryoptimizer"
-	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/vpc"
+	dnsoptimizer "github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/dns"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
@@ -45,11 +42,12 @@ func Run() error {
 	// FIXME: ВОТ ТУТ ОТКЛЮЧАТЬ АНАЛАЙЗЕРЫ ДЛЯ ДЕБАГА
 	analyzerList := []analyzers.Analyzer{
 		// krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
-		vpc.NewVPCAnalyzer(yandexClient),
-		platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
-		registryoptimizer.NewRegistryOptimizer(billing, cfg),
-		nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
-		platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		// vpc.NewVPCAnalyzer(yandexClient),
+		// platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		// registryoptimizer.NewRegistryOptimizer(billing, cfg),
+		// nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
+		// platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		dnsoptimizer.NewDNSOptimizer(yandexClient, billing),
 	}
 
 	var collectors []prometheus.Collector

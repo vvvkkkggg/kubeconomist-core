@@ -52,12 +52,12 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 	default:
 	}
 
-	const reportName = "krr-report.json"
-	if err := k.runKRR(reportName); err != nil {
-		panic(err)
-	}
+	const fileName = "config/krr_config.json"
+	// if err := k.runKRR(reportName); err != nil {
+	// 	panic(err)
+	// }
 
-	krrStats, err := k.loadReport(reportName)
+	krrStats, err := k.loadReport(fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -133,8 +133,6 @@ func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 			)
 		}
 	}
-
-	return
 }
 
 func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {

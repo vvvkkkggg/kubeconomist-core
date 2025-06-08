@@ -1,0 +1,15 @@
+# HELP kubeconomist_vpc_ip_is_used Is used IP
+# TYPE kubeconomist_vpc_ip_is_used gauge
+kubeconomist_vpc_ip_is_used{ip_address="10.0.12.5"} 1
+kubeconomist_vpc_ip_is_used{ip_address="192.168.1.128"} 0
+kubeconomist_vpc_ip_is_used{ip_address="172.16.8.42"} 1
+kubeconomist_vpc_ip_is_used{ip_address="10.122.64.17"} 1
+kubeconomist_vpc_ip_is_used{ip_address="192.168.0.1"} 1
+kubeconomist_vpc_ip_is_used{ip_address="172.31.24.93"} 0
+kubeconomist_vpc_ip_is_used{ip_address="10.8.0.12"} 1
+kubeconomist_vpc_ip_is_used{ip_address="203.0.113.55"} 1
+kubeconomist_vpc_ip_is_used{ip_address="192.168.3.77"} 0
+kubeconomist_vpc_ip_is_used{ip_address="172.21.7.234"} 0
+kubeconomist_vpc_ip_is_used{ip_address="10.90.3.1"} 1
+kubeconomist_vpc_ip_is_used{ip_address="198.51.100.22"} 0
+kubeconomist_vpc_ip_is_used{ip_address="192.168.100.100"} 1

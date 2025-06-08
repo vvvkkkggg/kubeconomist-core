@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"os"
 	"os/exec"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,7 +46,18 @@ func NewKrrAnalyzer(
 func (k *KrrAnalyzer) Run(ctx context.Context) {
 	slog.Info("run krr analyzer")
 
-	krrStats, err := k.callKRR()
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
+
+	const reportName = "krr-report.json"
+	if err := k.runKRR(reportName); err != nil {
+		panic(err)
+	}
+
+	krrStats, err := k.loadReport(reportName)
 	if err != nil {
 		panic(err)
 	}
@@ -81,41 +93,41 @@ func (k *KrrAnalyzer) calculatePrice(rows []KrrOutput) {
 			)
 		}
 
-		if r.Object.Requests.CPU != nil && *r.Object.Requests.CPU > *r.Recommended.Requests.CPU {
+		if r.Object.Allocations.Requests.CPU != nil && *r.Object.Allocations.Requests.CPU > *r.Recommended.Requests.CPU.Value {
 			// todo: remove hardcoded platform
-			price, err := k.billing.GetPriceCPURUB("standard-v1", "100", model.CPUCount(*r.Object.Requests.CPU-*r.Recommended.Requests.CPU))
+			price, err := k.billing.GetPriceCPURUB("standard-v1", "100", model.CPUCount(*r.Object.Allocations.Requests.CPU-*r.Recommended.Requests.CPU.Value))
 			if err != nil {
 				panic(err)
 			}
 
 			sendMetrics(
-				*r.Object.Requests.CPU, *r.Recommended.Requests.CPU,
+				*r.Object.Allocations.Requests.CPU, *r.Recommended.Requests.CPU.Value,
 				ResourceCPU,
 				ConsumptionReal,
 			)
 
 			sendMetrics(
-				*r.Object.Requests.CPU*float64(price), *r.Recommended.Requests.CPU*float64(price), // todo: add money multiplier
+				*r.Object.Allocations.Requests.CPU*float64(price), *r.Recommended.Requests.CPU.Value*float64(price), // todo: add money multiplier
 				ResourceCPU,
 				ConsumptionMoney,
 			)
 		}
 
-		if r.Object.Requests.Memory != nil && *r.Object.Requests.Memory > *r.Recommended.Requests.Memory {
+		if r.Object.Allocations.Requests.Memory != nil && *r.Object.Allocations.Requests.Memory > *r.Recommended.Requests.Memory.Value {
 			// todo: remove hardcoded platform
-			price, err := k.billing.GetPriceRAMRUB("standard-v1", model.RAMCount(*r.Object.Requests.Memory-*r.Recommended.Requests.Memory))
+			price, err := k.billing.GetPriceRAMRUB("standard-v1", model.RAMCount(*r.Object.Allocations.Requests.Memory-*r.Recommended.Requests.Memory.Value))
 			if err != nil {
 				panic(err)
 			}
 
 			sendMetrics(
-				*r.Object.Requests.Memory, *r.Recommended.Requests.Memory,
+				*r.Object.Allocations.Requests.Memory, *r.Recommended.Requests.Memory.Value,
 				ResourceRAM,
 				ConsumptionReal,
 			)
 
 			sendMetrics(
-				*r.Object.Requests.Memory*float64(price), *r.Recommended.Requests.Memory*float64(price), // todo: add money multiplier
+				*r.Object.Allocations.Requests.Memory*float64(price), *r.Recommended.Requests.Memory.Value*float64(price), // todo: add money multiplier
 				ResourceRAM,
 				ConsumptionMoney,
 			)
@@ -129,28 +141,35 @@ func (k *KrrAnalyzer) GetCollectors() []prometheus.Collector {
 	return []prometheus.Collector{k.resourceGauge}
 }
 
-func (k *KrrAnalyzer) callKRR() ([]KrrOutput, error) {
+func (k *KrrAnalyzer) runKRR(outputFile string) error {
 	cmd := exec.Command(
 		"krr", "simple",
 		"-p", k.cfg.PrometheusURL,
 		"--prometheus-auth-header", k.cfg.PrometheusAuthHeader,
 		"--history-duration", k.cfg.HistoryDuration,
-		"-f", "json")
+		"-f", "json",
+		"--fileoutput", outputFile,
+	)
 
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	return cmd.Run()
+}
 
-	if err := cmd.Run(); err != nil {
+func (k *KrrAnalyzer) loadReport(fileName string) ([]KrrOutput, error) {
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
 		return nil, err
 	}
 
-	resultJSON := stdout.Bytes()
+	bytes = preprocessRawData(bytes)
 
-	var krrResult []KrrOutput
-	if err := json.Unmarshal(resultJSON, &krrResult); err != nil {
+	var krrResult Report
+	if err := json.Unmarshal(bytes, &krrResult); err != nil {
 		return nil, err
 	}
 
-	return krrResult, nil
+	return krrResult.Scans, nil
+}
+
+func preprocessRawData(data []byte) []byte {
+	return bytes.ReplaceAll(data, []byte(`"?"`), []byte(`null`))
 }

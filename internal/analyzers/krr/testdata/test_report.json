@@ -1,0 +1,416 @@
+{
+  "scans": [
+    {
+      "object": {
+        "cluster": "dev",
+        "name": "my-app-1",
+        "container": "my-app-1",
+        "pods": [
+          {
+            "name": "my-app-1-6c6744d88d-z627g",
+            "deleted": false
+          }
+        ],
+        "hpa": null,
+        "namespace": "my-namespace-name",
+        "kind": "Deployment",
+        "allocations": {
+          "requests": {
+            "cpu": null,
+            "memory": null
+          },
+          "limits": {
+            "cpu": null,
+            "memory": null
+          },
+          "info": {}
+        },
+        "warnings": [
+          "NoPrometheusPods"
+        ],
+        "labels": {
+          "app": "my-app-1",
+
+          "app.kubernetes.io/name": "my-app-1"
+        },
+        "annotations": {
+          "deployment.kubernetes.io/revision": "6"
+        }
+      },
+      "recommended": {
+        "requests": {
+          "cpu": {
+            "value": 0.01,
+            "severity": "WARNING"
+          },
+          "memory": {
+            "value": 104857600.0,
+            "severity": "WARNING"
+          }
+        },
+        "limits": {
+          "cpu": {
+            "value": null,
+            "severity": "GOOD"
+          },
+          "memory": {
+            "value": 104857600.0,
+            "severity": "WARNING"
+          }
+        },
+        "info": {
+          "cpu": null,
+          "memory": null
+        }
+      },
+      "severity": "WARNING"
+    },
+    {
+      "object": {
+        "cluster": "dev",
+        "name": "my-app-2",
+        "container": "my-app-2",
+        "pods": [
+          {
+            "name": "my-app-2-6d6c8977bb-nd2rc",
+            "deleted": false
+          }
+        ],
+        "hpa": null,
+        "namespace": "my-namespace-name",
+        "kind": "Deployment",
+        "allocations": {
+          "requests": {
+            "cpu": 0.1,
+            "memory": 104857600.0
+          },
+          "limits": {
+            "cpu": 0.5,
+            "memory": 536870912.0
+          },
+          "info": {}
+        },
+        "warnings": [
+          "NoPrometheusPods"
+        ],
+        "labels": {
+          "app": "my-app-2",
+          "app.kubernetes.io/instance": "my-app-2",
+          "app.kubernetes.io/name": "my-app-2"
+        },
+        "annotations": {}
+      },
+      "recommended": {
+        "requests": {
+          "cpu": {
+            "value": "?",
+            "severity": "UNKNOWN"
+          },
+          "memory": {
+            "value": "?",
+            "severity": "UNKNOWN"
+          }
+        },
+        "limits": {
+          "cpu": {
+            "value": "?",
+            "severity": "UNKNOWN"
+          },
+          "memory": {
+            "value": "?",
+            "severity": "UNKNOWN"
+          }
+        },
+        "info": {
+          "cpu": "Not enough data",
+          "memory": "Not enough data"
+        }
+      },
+      "severity": "UNKNOWN"
+    },
+    {
+      "object": {
+        "cluster": "dev",
+        "name": "my-app-3",
+        "container": "my-app-3",
+        "pods": [
+          {
+            "name": "my-app-3-1",
+            "deleted": false
+          },
+          {
+            "name": "my-app-3-0",
+            "deleted": false
+          },
+          {
+            "name": "my-app-3-2",
+            "deleted": false
+          }
+        ],
+        "hpa": null,
+        "namespace": "my-namespace-name",
+        "kind": "StatefulSet",
+        "allocations": {
+          "requests": {
+            "cpu": 1.0,
+            "memory": 4294967296.0
+          },
+          "limits": {
+            "cpu": 1.0,
+            "memory": 4294967296.0
+          },
+          "info": {}
+        },
+        "warnings": [],
+        "labels": {
+          "app": "my-app-3",
+          "app.kubernetes.io/name": "my-app-3",
+          "app.kubernetes.io/version": "1.25.3.2-0-centos7"
+        },
+        "annotations": {}
+      },
+      "recommended": {
+        "requests": {
+          "cpu": {
+            "value": 0.085,
+            "severity": "CRITICAL"
+          },
+          "memory": {
+            "value": 2587885568.0,
+            "severity": "CRITICAL"
+          }
+        },
+        "limits": {
+          "cpu": {
+            "value": null,
+            "severity": "WARNING"
+          },
+          "memory": {
+            "value": 2587885568.0,
+            "severity": "CRITICAL"
+          }
+        },
+        "info": {
+          "cpu": null,
+          "memory": null
+        }
+      },
+      "severity": "CRITICAL"
+    },
+    {
+      "object": {
+        "cluster": "dev",
+        "name": "my-app-4",
+        "container": "somecontainer",
+        "pods": [
+          {
+            "name": "my-app-4-2",
+            "deleted": false
+          },
+          {
+            "name": "my-app-4-0",
+            "deleted": false
+          },
+          {
+            "name": "my-app-4-1",
+            "deleted": false
+          }
+        ],
+        "hpa": null,
+        "namespace": "my-namespace-name",
+        "kind": "StatefulSet",
+        "allocations": {
+          "requests": {
+            "cpu": 0.1,
+            "memory": 268435456.0
+          },
+          "limits": {
+            "cpu": null,
+            "memory": null
+          },
+          "info": {}
+        },
+        "warnings": [],
+        "labels": {
+          "app": "my-app-4",
+          "app.kubernetes.io/name": "my-app-4"
+        },
+        "annotations": {}
+      },
+      "recommended": {
+        "requests": {
+          "cpu": {
+            "value": 0.443,
+            "severity": "WARNING"
+          },
+          "memory": {
+            "value": 361758720.0,
+            "severity": "GOOD"
+          }
+        },
+        "limits": {
+          "cpu": {
+            "value": null,
+            "severity": "GOOD"
+          },
+          "memory": {
+            "value": 361758720.0,
+            "severity": "WARNING"
+          }
+        },
+        "info": {
+          "cpu": null,
+          "memory": null
+        }
+      },
+      "severity": "WARNING"
+    },
+    {
+      "object": {
+        "cluster": "dev",
+        "name": "my-app-4",
+        "container": "exporter",
+        "pods": [
+          {
+            "name": "my-app-4-2",
+            "deleted": false
+          },
+          {
+            "name": "my-app-4-0",
+            "deleted": false
+          },
+          {
+            "name": "my-app-4-1",
+            "deleted": false
+          }
+        ],
+        "hpa": null,
+        "namespace": "my-namespace-name",
+        "kind": "StatefulSet",
+        "allocations": {
+          "requests": {
+            "cpu": 0.02,
+            "memory": 33554432.0
+          },
+          "limits": {
+            "cpu": null,
+            "memory": 268435456.0
+          },
+          "info": {}
+        },
+        "warnings": [],
+        "labels": {
+          "app": "my-app-4"
+        },
+        "annotations": {}
+      },
+      "recommended": {
+        "requests": {
+          "cpu": {
+            "value": 0.03,
+            "severity": "GOOD"
+          },
+          "memory": {
+            "value": 104857600.0,
+            "severity": "GOOD"
+          }
+        },
+        "limits": {
+          "cpu": {
+            "value": null,
+            "severity": "GOOD"
+          },
+          "memory": {
+            "value": 104857600.0,
+            "severity": "OK"
+          }
+        },
+        "info": {
+          "cpu": null,
+          "memory": null
+        }
+      },
+      "severity": "OK"
+    }
+  ],
+  "score": 52,
+  "resources": [
+    "cpu",
+    "memory"
+  ],
+  "description": "[b]Simple Strategy[/b]\n\nCPU request: 95.0% percentile, limit: unset\nMemory request: max + 15.0%, limit: max + 15.0%\nHistory: 3.0 hours\nStep: 1.25 minutes\n\nAll parameters can be customized. For example: `krr simple --cpu_percentile=90 --memory_buffer_percentage=15 --history_duration=24 --timeframe_duration=0.5`\n\nThis strategy does not work with objects with HPA defined (Horizontal Pod Autoscaler).\nIf HPA is defined for CPU or Memory, the strategy will return \"?\" for that resource.\nYou can override this behaviour by passing the --allow-hpa flag\n\nLearn more: [underline]https://github.com/robusta-dev/krr#algorithm[/underline]",
+  "strategy": {
+    "name": "simple",
+    "settings": {
+      "history_duration": 3.0,
+      "timeframe_duration": 1.25,
+      "cpu_percentile": 95.0,
+      "memory_buffer_percentage": 15.0,
+      "points_required": 100,
+      "allow_hpa": false,
+      "use_oomkill_data": false,
+      "oom_memory_buffer_percentage": 25.0
+    }
+  },
+  "errors": [
+    {
+      "name": "HistoryRangeError"
+    }
+  ],
+  "clusterSummary": {
+    "cluster_memory": 4451508740096.0,
+    "cluster_cpu": 1176.0,
+    "kube_system_mem_req": 145619943424.0,
+    "kube_system_cpu_req": 121.89000000000368
+  },
+  "config": {
+    "quiet": false,
+    "verbose": true,
+    "clusters": [],
+    "kubeconfig": null,
+    "impersonate_user": null,
+    "impersonate_group": null,
+    "namespaces": [
+      "my-namespace-name"
+    ],
+    "resources": "*",
+    "selector": null,
+    "cpu_min_value": 10,
+    "memory_min_value": 100,
+    "prometheus_url": "http://internal.prometheus.url/select/0/prometheus",
+    "prometheus_auth_header": null,
+    "prometheus_other_headers": {},
+    "prometheus_ssl_enabled": false,
+    "prometheus_cluster_label": null,
+    "prometheus_label": null,
+    "eks_managed_prom": false,
+    "eks_managed_prom_profile_name": null,
+    "eks_access_key": null,
+    "eks_secret_key": null,
+    "eks_service_name": "aps",
+    "eks_managed_prom_region": null,
+    "coralogix_token": null,
+    "openshift": false,
+    "max_workers": 10,
+    "format": "json",
+    "show_cluster_name": false,
+    "strategy": "simple",
+    "log_to_stderr": false,
+    "width": null,
+    "show_severity": true,
+    "file_output": "krr-report-salo.json",
+    "file_output_dynamic": false,
+    "slack_output": null,
+    "other_args": {
+      "history_duration": "3",
+      "timeframe_duration": "1.25",
+      "cpu_percentile": "95",
+      "memory_buffer_percentage": "15",
+      "points_required": "100",
+      "allow_hpa": false,
+      "use_oomkill_data": false,
+      "oom_memory_buffer_percentage": "25"
+    },
+    "inside_cluster": false
+  }
+}

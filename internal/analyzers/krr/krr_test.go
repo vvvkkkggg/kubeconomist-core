@@ -3,10 +3,12 @@ package krr
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 )
+
+const reportName = "testdata/test_report.json"
 
 var testConfig = config.KrrAnalyzerConfig{
 	PrometheusURL:        "https://monitoring.api.cloud.yandex.net/prometheus/workspaces/monjnbprk79m451udi83",
@@ -18,9 +20,10 @@ func setupKrrAnalyzer() KrrAnalyzer {
 	return *NewKrrAnalyzer(nil, testConfig)
 }
 
-func TestCallKRR(t *testing.T) {
+func TestLoadReport(t *testing.T) {
 	krr := setupKrrAnalyzer()
-	result, err := krr.callKRR()
-	assert.NoError(t, err)
-	assert.Equal(t, result, "")
+	result, err := krr.loadReport(reportName)
+	require.NoError(t, err)
+	// assert.Equal(t, nil, result)
+	_ = result
 }

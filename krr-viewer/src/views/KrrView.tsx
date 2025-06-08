@@ -2,20 +2,21 @@ import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
 import { RecommendationsTable } from '../components/RecommendationsTable';
 import { ViewHeader } from '../components/ViewHeader';
+import * as format from '../formatters';
 import { useKrrData } from '../hooks/useKrrData';
 import { useSort } from '../hooks/useSort';
 import type { Scan } from '../types';
 
-function formatDate(iso: string) {
-    return new Date(iso).toLocaleString(undefined, {
-        year: '2-digit',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-    });
-}
+// function formatDate(iso: string) {
+//     return new Date(iso).toLocaleString(undefined, {
+//         year: '2-digit',
+//         month: 'short',
+//         day: '2-digit',
+//         hour: '2-digit',
+//         minute: '2-digit',
+//         second: '2-digit',
+//     });
+// }
 
 export const KrrView: React.FC = () => {
     const { data: krrReport, loading, error } = useKrrData();
@@ -64,6 +65,7 @@ export const KrrView: React.FC = () => {
             'Mem (Lim)': `${s.object.allocations.limits.memory} -> ${s.recommended.limits.memory.value}`,
             'CPU (Req)': `${s.object.allocations.requests.cpu} -> ${s.recommended.requests.cpu.value}`,
             'CPU (Lim)': `${s.object.allocations.limits.cpu} -> ${s.recommended.limits.cpu.value}`,
+            'Cost Savings (₽/month)': format.calculateCostSavings(s),
         }));
         const csv = unparse(dataToExport);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

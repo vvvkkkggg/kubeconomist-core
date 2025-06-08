@@ -12,6 +12,7 @@ export const mockNodeOptimizerRecommendations: NodeOptimizerRecommendation[] = [
     desiredMemoryGB: 32,
     currentPrice: 150.50,
     desiredPrice: 80.25,
+    savings: 70.25,
   },
   {
     id: 'fhm8i6d6b8j2j4a6n0n1',
@@ -24,6 +25,7 @@ export const mockNodeOptimizerRecommendations: NodeOptimizerRecommendation[] = [
     desiredMemoryGB: 64,
     currentPrice: 301.00,
     desiredPrice: 160.50,
+    savings: 140.50,
   },
   {
     id: 'epd3k8v3g4b1h2b5b8u1',
@@ -36,6 +38,7 @@ export const mockNodeOptimizerRecommendations: NodeOptimizerRecommendation[] = [
     desiredMemoryGB: 16,
     currentPrice: 75.25,
     desiredPrice: 40.12,
+    savings: 35.13,
   },
   // An instance that is already optimized
   {
@@ -49,5 +52,6 @@ export const mockNodeOptimizerRecommendations: NodeOptimizerRecommendation[] = [
     desiredMemoryGB: 8,
     currentPrice: 40.12,
     desiredPrice: 40.12,
+    savings: 0,
   },
 ]; 

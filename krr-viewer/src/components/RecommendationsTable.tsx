@@ -49,7 +49,8 @@ export const RecommendationsTable = <T extends Scan>({
             <th>Mem (Lim)</th>
             <th>CPU (Req)</th>
             <th>CPU (Lim)</th>
-            <th>КНОПКА</th>
+            <th>Экономия (₽/мес)</th>
+            <th>extra</th>
           </tr>
         </thead>
         <tbody>
@@ -91,7 +92,10 @@ export const RecommendationsTable = <T extends Scan>({
                 />
               </td>
               <td>
-                <PodLink scan={scan}>Изменить</PodLink>
+                {format.formatRubles(format.calculateCostSavings(scan))}
+              </td>
+              <td>
+                <PodLink scan={scan}>Сделать дешевле</PodLink>
               </td>
             </tr>
           ))}

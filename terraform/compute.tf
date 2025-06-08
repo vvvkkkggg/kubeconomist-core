@@ -3,14 +3,14 @@ data "yandex_compute_image" "container-optimized-image" {
 }
 
 resource "yandex_compute_instance" "no-public-ip" {
-  count       = 3
+  count       = 1
   name        = "alkosenko-compute-instance-${count.index + 1}"
-  platform_id = "standard-v1"
+  platform_id = "standard-v${count.index + 1}"
   zone        = var.zone
 
   resources {
-    cores  = 4
-    memory = 8
+    cores         = 4
+    memory        = 8
     core_fraction = 100
   }
 
@@ -27,17 +27,19 @@ resource "yandex_compute_instance" "no-public-ip" {
   metadata = {
     ssh-keys = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
   }
+
+  allow_stopping_for_update = true
 }
 
 resource "yandex_compute_instance" "with-public-ip" {
-    count =  0
+  count       = 0
   name        = "alkosenko-compute-instance-with-public-ip"
   platform_id = "standard-v2"
   zone        = var.zone
 
   resources {
-    cores  = 8
-    memory = 8
+    cores         = 8
+    memory        = 8
     core_fraction = 100
   }
 
@@ -56,4 +58,6 @@ resource "yandex_compute_instance" "with-public-ip" {
   metadata = {
     ssh-keys = "ubuntu:${file("~/.ssh/id_ed25519.pub")}"
   }
+
+  allow_stopping_for_update = true
 }

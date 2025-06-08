@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type SendMessageReq struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
+	ChatID    int64  `json:"chat_id"`
+	Text      string `json:"text"`
+	ParseMode string `json:"parse_mode,omitempty"`
 }
 
 type apiResponse struct {
@@ -33,6 +35,14 @@ func New(token string, chatID int64) *Bot {
 }
 
 func (b *Bot) SendMessage(ctx context.Context, text string) error {
+	//reserved := []string{"_", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "/", "|", "{", "}", ".", "!"}
+
+	reserved := []string{}
+
+	for _, s := range reserved {
+		text = strings.ReplaceAll(text, s, "\\"+s)
+	}
+
 	return b.sendMessage(b.chatID, text)
 }
 
@@ -43,6 +53,8 @@ func (b *Bot) sendMessage(chatID int64, text string) error {
 		ChatID: chatID,
 		Text:   text,
 	}
+
+	//msg.ParseMode = "MarkdownV2"
 
 	data, err := json.Marshal(msg)
 	if err != nil {

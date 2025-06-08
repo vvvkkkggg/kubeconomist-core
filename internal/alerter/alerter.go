@@ -32,8 +32,8 @@ func (a *Alerter) generateReport(r metrics.OptimizerRecommendations) string {
 	var sb strings.Builder
 
 	// Заголовок отчета
-	sb.WriteString("🚀 *Отчет оптимизации Kubernetes кластера*\n\n")
-	sb.WriteString("_Ресурсы, которые можно оптимизировать:_\n\n")
+	sb.WriteString("🚀 Отчет оптимизации Kubernetes кластера\n\n")
+	sb.WriteString("Ресурсы, которые можно оптимизировать:\n\n")
 
 	used := false
 
@@ -84,16 +84,16 @@ func (a *Alerter) generateReport(r metrics.OptimizerRecommendations) string {
 	if len(r.NodeRecommendations) > 0 {
 		used = true
 
-		sb.WriteString("🖥️ *Оптимизация нод:*\n")
+		sb.WriteString("🖥️ Оптимизация нод:\n")
 		for _, node := range r.NodeRecommendations {
 			saving := node.CurrentPrice - node.DesiredPrice
 			nodeSavings += saving
 
 			sb.WriteString(fmt.Sprintf(
-				"* Instance: `%s`\n"+
+				" Instance: %s\n"+
 					"  - CPU: %d → %d ядер\n"+
 					"  - RAM: %d → %d MB\n"+
-					"  - Экономия: *%.2f руб.*\n\n",
+					"  - Экономия: %.2f руб.\n\n",
 				node.InstanceId,
 				node.CurrentCores,
 				node.DesiredCores,
@@ -109,13 +109,13 @@ func (a *Alerter) generateReport(r metrics.OptimizerRecommendations) string {
 	if len(r.PlatformRecommendations) > 0 {
 		used = true
 
-		sb.WriteString("📦 *Оптимизация платформ:*\n")
+		sb.WriteString("📦 Оптимизация платформ:\n")
 		for _, platform := range r.PlatformRecommendations {
 			platformSavings += platform.Savings
 			sb.WriteString(fmt.Sprintf(
-				"* NodeGroup: `%s`\n"+
-					"  - Платформа: `%s` → `%s`\n"+
-					"  - Экономия: *%.2f руб.*\n\n",
+				"NodeGroup: %s\n"+
+					"  - Платформа: %s → %s\n"+
+					"  - Экономия: %.2f руб.\n\n",
 				platform.NodeGroupId,
 				platform.CurrentPlatform,
 				platform.DesiredPlatform,
@@ -129,10 +129,10 @@ func (a *Alerter) generateReport(r metrics.OptimizerRecommendations) string {
 	if totalSavings > 0 {
 		used = true
 
-		sb.WriteString("💸 *Итоговая экономия:*\n")
+		sb.WriteString("💸 Итоговая экономия:\n")
 		sb.WriteString(fmt.Sprintf(
-			"- Ноды: *%.2f руб.*\n- Платформы: *%.2f руб.*\n"+
-				"✨ *Всего: %.2f руб.*\n",
+			"- Ноды: %.2f руб.\n- Платформы: %.2f руб.\n"+
+				"✨ Всего: %.2f руб.\n",
 			nodeSavings,
 			platformSavings,
 			totalSavings,
@@ -142,7 +142,7 @@ func (a *Alerter) generateReport(r metrics.OptimizerRecommendations) string {
 	if !used {
 		sb.WriteString("🎉 *Поздравляем! Оптимизация не требуется, кластер работает оптимально*")
 	} else {
-		sb.WriteString("\n_Оптимизация поможет снизить затраты и повысить эффективность кластера_")
+		sb.WriteString("\nОптимизация поможет снизить затраты и повысить эффективность кластера")
 	}
 
 	return sb.String()

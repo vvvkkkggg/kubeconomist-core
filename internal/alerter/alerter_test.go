@@ -1,7 +1,6 @@
 package alerter
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -210,8 +209,6 @@ func TestGenerateReport_PlatformOptimizationsOnly(t *testing.T) {
 	}
 
 	result := a.generateReport(report)
-
-	fmt.Println(result)
 
 	if !strings.Contains(result, "`n1-highcpu` → `e2-custom`") {
 		t.Error("Неправильное отображение платформ")

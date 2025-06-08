@@ -43,22 +43,14 @@ func NewKrrAnalyzer(
 }
 
 func (k *KrrAnalyzer) Run(ctx context.Context) {
-	for {
-		slog.Info("run krr analyzer")
+	slog.Info("run krr analyzer")
 
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		krrStats, err := k.callKRR()
-		if err != nil {
-			panic(err)
-		}
-
-		k.calculatePrice(krrStats)
+	krrStats, err := k.callKRR()
+	if err != nil {
+		panic(err)
 	}
+
+	k.calculatePrice(krrStats)
 }
 
 // calculatePrice iterates over each container’s old vs. new requests,

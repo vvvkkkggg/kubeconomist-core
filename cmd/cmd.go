@@ -4,11 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
 	dnsoptimizer "github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/dns"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/krr"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/nodeoptimizer"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/platformoptimizer"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/registryoptimizer"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/storageoptimizer"
+	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers/vpc"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/billing"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/config"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/metrics"
@@ -42,12 +49,11 @@ func Run() error {
 
 	// FIXME: ВОТ ТУТ ОТКЛЮЧАТЬ АНАЛАЙЗЕРЫ ДЛЯ ДЕБАГА
 	analyzerList := []analyzers.Analyzer{
-		// krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
-		// vpc.NewVPCAnalyzer(yandexClient),
-		// platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
-		// registryoptimizer.NewRegistryOptimizer(billing, cfg),
-		// nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
-		// platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		krr.NewKrrAnalyzer(billing, cfg.Analyzers.KRR),
+		vpc.NewVPCAnalyzer(yandexClient),
+		platformoptimizer.NewPlatformOptimizer(yandexClient, billing),
+		registryoptimizer.NewRegistryOptimizer(billing, cfg),
+		nodeoptimizer.NewNodeOptimizer(yandexClient, billing),
 		dnsoptimizer.NewDNSOptimizer(yandexClient, billing),
 		storageoptimizer.NewStorageOptimizer(yandexClient, billing),
 	}
@@ -59,7 +65,22 @@ func Run() error {
 	}
 
 	for _, a := range analyzerList {
-		go a.Run(ctx)
+		go func() {
+			for {
+				slog.Info("running analyzer", slog.String("analyzer", reflect.TypeOf(a).String()))
+
+				select {
+				case <-ctx.Done():
+					return
+				default:
+				}
+
+				a.Run(ctx)
+
+				time.Sleep(10 * time.Second)
+			}
+
+		}()
 	}
 
 	slog.Info("analyzers are running")

@@ -82,30 +82,23 @@ func (v *VPCAnalyzer) GetAddresses(ctx context.Context) ([]Address, error) {
 }
 
 func (v *VPCAnalyzer) Run(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-		default:
+	addrs, err := v.GetAddresses(context.Background())
+	if err != nil {
+		return
+	}
+
+	for _, addr := range addrs {
+		if !addr.IsReserved {
+			continue
 		}
 
-		addrs, err := v.GetAddresses(context.Background())
-		if err != nil {
-			return
-		}
-
-		for _, addr := range addrs {
-			if !addr.IsReserved {
-				continue
-			}
-
-			v.m.With(prometheus.Labels{
-				"cloud_id":    addr.CloudID,
-				"folder_id":   addr.FolderID,
-				"ip_address":  addr.IP,
-				"is_used":     strconv.Itoa(boolToInt(addr.IsUsed)),
-				"is_reserved": strconv.Itoa(boolToInt(addr.IsReserved)),
-			}).Set(1.0)
-		}
+		v.m.With(prometheus.Labels{
+			"cloud_id":    addr.CloudID,
+			"folder_id":   addr.FolderID,
+			"ip_address":  addr.IP,
+			"is_used":     strconv.Itoa(boolToInt(addr.IsUsed)),
+			"is_reserved": strconv.Itoa(boolToInt(addr.IsReserved)),
+		}).Set(1.0)
 	}
 }
 

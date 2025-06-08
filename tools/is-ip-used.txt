@@ -1,17 +1,17 @@
 # HELP kubeconomist_vpc_ip_is_used Is used IP
 # TYPE kubeconomist_vpc_ip_is_used gauge
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="10.128.12.5"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="192.168.1.1"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="172.16.8.42"} 0
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="84.252.142.128"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="10.122.64.17"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="192.168.0.253"} 0
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="172.31.24.93"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="37.9.115.22"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="10.8.0.12"} 0
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="192.168.3.77"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="172.21.7.234"} 0
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="95.163.212.64"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="10.90.3.1"} 1
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="192.168.100.100"} 0
-kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="172.19.42.128"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="10.128.12.5", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="192.168.1.1", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="172.16.8.42", is_used="0"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo1e3k9lmn4p5q6r7s8", ip_address="84.252.142.128", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="10.122.64.17", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="192.168.0.253", is_used="0"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="172.31.24.93", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo2a3b4c5d6e7f8g9h0", ip_address="37.9.115.22", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="10.8.0.12", is_used="0"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="192.168.3.77", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="172.21.7.234", is_used="0"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo3c5d6e7f8g9h0i1j2", ip_address="95.163.212.64", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="10.90.3.1", is_used="1"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="192.168.100.100", is_used="0"} 1
+kubeconomist_vpc_ip_is_used{cloud_id="b1g8vl7ekjq3a5d9f2m1", folder_id="fo4d7e8f9g0h1i2j3k4", ip_address="172.19.42.128", is_used="1"} 1

@@ -8,3 +8,4 @@ analyzers:
     history_duration: "1"
   vpc:
     yc_token: _
+  folder_id: "b1g8enqi42dal6t489ou"

@@ -7,6 +7,8 @@ interface ViewHeaderProps {
     onExport: () => void;
     showHideEmpty?: boolean;
     scanDateSelect?: React.ReactNode;
+    onShowSavingsOnlyToggle?: (show: boolean) => void;
+    showSavingsOnly?: boolean;
 }
 
 export const ViewHeader: React.FC<ViewHeaderProps> = ({
@@ -14,7 +16,9 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({
     onHideEmptyToggle,
     onExport,
     showHideEmpty = true,
-    scanDateSelect
+    scanDateSelect,
+    onShowSavingsOnlyToggle,
+    showSavingsOnly,
 }) => {
     return (
         <div className="krr-header">
@@ -27,6 +31,12 @@ export const ViewHeader: React.FC<ViewHeaderProps> = ({
                     <label className="checkbox-container">
                         <input type="checkbox" onChange={(e) => onHideEmptyToggle(e.target.checked)} />
                         Hide empty recommendations
+                    </label>
+                )}
+                {showSavingsOnly && onShowSavingsOnlyToggle && (
+                     <label className="checkbox-container">
+                        <input type="checkbox" defaultChecked onChange={(e) => onShowSavingsOnlyToggle(e.target.checked)} />
+                        Show savings only
                     </label>
                 )}
             </div>

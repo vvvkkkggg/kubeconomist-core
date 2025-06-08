@@ -1,16 +1,12 @@
 import { unparse } from 'papaparse';
 import React, { useMemo, useState } from 'react';
+import { CloudLink } from '../components/CloudLink';
+import { FolderLink } from '../components/FolderLink';
 import { SortableHeader } from '../components/SortableHeader';
 import { ViewHeader } from '../components/ViewHeader';
 import { mockVpcRecommendations } from '../data/vpc-mock-data';
 import { useSort } from '../hooks/useSort';
 import type { VpcRecommendation } from '../types';
-
-const FolderLink: React.FC<{ folderId: string }> = ({ folderId }) => (
-    <a href={`https://console.yandex.cloud/folders/${folderId}`} target="_blank" rel="noopener noreferrer">
-      {folderId}
-    </a>
-);
 
 const VpcTable: React.FC<{ items: VpcRecommendation[] }> = ({ items }) => {
     const { items: sortedRecs, requestSort, sortKey: currentSortKey, sortDirection } = useSort(items, 'ipAddress', 'ascending');
@@ -31,7 +27,7 @@ const VpcTable: React.FC<{ items: VpcRecommendation[] }> = ({ items }) => {
                 <tbody>
                     {sortedRecs.map((rec) => (
                         <tr key={rec.id}>
-                            <td>{rec.cloudId}</td>
+                            <td><CloudLink cloudId={rec.cloudId} /></td>
                             <td><FolderLink folderId={rec.folderId} /></td>
                             <td>{rec.ipAddress}</td>
                             <td>{rec.isUsed ? 'Yes' : 'No'}</td>

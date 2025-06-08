@@ -3,6 +3,7 @@ package dnsoptimizer
 import (
 	"context"
 	"log/slog"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vvvkkkggg/kubeconomist-core/internal/analyzers"
@@ -25,10 +26,10 @@ func NewDNSOptimizer(ya *yandex.Client, b *billing.Billing) *DNSOptimizer {
 		prometheus.GaugeOpts{
 			Namespace: "kubeconomist",
 			Subsystem: "dns_optimizer",
-			Name:      "dns_optimization_zone_not_empty",
-			Help:      "Is DNS zone not empty",
+			Name:      "dns_optimization_zone",
+			Help:      "DNS zone information",
 		},
-		[]string{"cloud_id", "folder_id", "zone_id"},
+		[]string{"cloud_id", "folder_id", "zone_id", "is_used"},
 	)
 
 	return &DNSOptimizer{
@@ -80,16 +81,12 @@ func (n *DNSOptimizer) Run(ctx context.Context) {
 						return
 					}
 
-					v := 0.0
-					if isUsed {
-						v = 1.0
-					}
-
 					n.metric.With(prometheus.Labels{
 						"cloud_id":  cloud.Id,
 						"folder_id": folder.Id,
 						"zone_id":   zone.Id,
-					}).Set(v)
+						"is_used":   strconv.FormatBool(isUsed),
+					}).Set(1)
 				}
 			}
 		}

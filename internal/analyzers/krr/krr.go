@@ -52,7 +52,7 @@ func (k *KrrAnalyzer) Run(ctx context.Context) {
 	default:
 	}
 
-	const reportName = "./test/krr-report.json"
+	const reportName = "./config/krr_config.json"
 	// if err := k.runKRR(reportName); err != nil {
 	// 	panic(err)
 	// }

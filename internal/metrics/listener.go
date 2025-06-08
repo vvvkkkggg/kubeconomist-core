@@ -14,10 +14,10 @@ import (
 )
 
 type OptimizerRecommendations struct {
-	VPCRecommendations  []VPCOptimizerRecommendations      `json:"vpcRecommendations"`
-	DNSRecommendations  []DNSOptimizerRecommendations      `json:"dnsRecommendations"`
-	NodeRecommendations []NodeOptimizerRecommendations     `json:"nodeRecommendations"`
-	PlatformReport      []PlatformOptimizerRecommendations `json:"platformRecomendation"`
+	VPCRecommendations      []VPCOptimizerRecommendations      `json:"vpcRecommendations"`
+	DNSRecommendations      []DNSOptimizerRecommendations      `json:"dnsRecommendations"`
+	NodeRecommendations     []NodeOptimizerRecommendations     `json:"nodeRecommendations"`
+	PlatformRecommendations []PlatformOptimizerRecommendations `json:"platformRecommendations"`
 }
 
 type VPCOptimizerRecommendations struct {
@@ -248,21 +248,22 @@ func PrintAllMetrics(reg *prometheus.Registry) (OptimizerRecommendations, error)
 				}
 
 				platformOpt[nodeGroupId] = v
+
 			}
 		}
 	}
 
 	v := OptimizerRecommendations{
-		VPCRecommendations:  vpcOpt,
-		DNSRecommendations:  dnsOpt,
-		NodeRecommendations: make([]NodeOptimizerRecommendations, 0, len(nodeOpt)),
-		PlatformReport:      make([]PlatformOptimizerRecommendations, 0, len(platformOpt)),
+		VPCRecommendations:      vpcOpt,
+		DNSRecommendations:      dnsOpt,
+		NodeRecommendations:     make([]NodeOptimizerRecommendations, 0, len(nodeOpt)),
+		PlatformRecommendations: make([]PlatformOptimizerRecommendations, 0, len(platformOpt)),
 	}
 	for _, n := range nodeOpt {
 		v.NodeRecommendations = append(v.NodeRecommendations, n)
 	}
 	for _, p := range platformOpt {
-		v.PlatformReport = append(v.PlatformReport, p)
+		v.PlatformRecommendations = append(v.PlatformRecommendations, p)
 	}
 
 	return v, nil

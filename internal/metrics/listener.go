@@ -62,8 +62,8 @@ type PlatformOptimizerRecommendations struct {
 	Savings         float64 `json:"savings"`
 }
 
-func PrintAllMetrics(reg *prometheus.Registry) (OptimizerRecommendations, error) {
-	metricFamilies, err := reg.Gather()
+func GetOptimizerRecommendations() (OptimizerRecommendations, error) {
+	metricFamilies, err := registry.Gather()
 	if err != nil {
 		return OptimizerRecommendations{}, err
 	}
@@ -269,11 +269,13 @@ func PrintAllMetrics(reg *prometheus.Registry) (OptimizerRecommendations, error)
 	return v, nil
 }
 
+var registry = prometheus.NewRegistry()
+
 func ListenAndServe(ctx context.Context, cfg config.MetricsConfig, metricsCollector ...prometheus.Collector) error {
 	var (
 		chErr    = make(chan error)
 		mux      = http.NewServeMux()
-		registry = prometheus.NewRegistry()
+		registry = registry
 	)
 	registry.MustRegister(metricsCollector...)
 
@@ -281,7 +283,7 @@ func ListenAndServe(ctx context.Context, cfg config.MetricsConfig, metricsCollec
 		registry, promhttp.HandlerFor(registry, promhttp.HandlerOpts{})),
 	)
 	mux.HandleFunc("/metrics-json", func(w http.ResponseWriter, r *http.Request) {
-		v, err := PrintAllMetrics(registry)
+		v, err := GetOptimizerRecommendations()
 		if err != nil {
 			http.Error(w, "Failed to gather metrics", http.StatusInternalServerError)
 			return

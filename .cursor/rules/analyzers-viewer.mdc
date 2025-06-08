@@ -1,0 +1,46 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+krr-viewer - web application written in React
+
+# multiple windows (tabs): 
+1. krr pods resources recommendations with potential price reductions 
+2. Cloud VPC: unused IP addresses recomendations
+3. Storage:
+3.a cold/hot object storage recommendations - list of buckets which pontentially
+3.b ssd/hdd - usage size recommendations
+4. Container Registry recommendations: images unsused for longer then X days and potentially can be deleted
+
+# Coloring
+1. OK - Green - small differences and amounts of money to save
+2. Warning - Yellow - medium difference between recommendation and current state, not urgent
+3. Critical - Red - Extremely high difference or lots of space can be reduced or very long days images unused
+4. UNKNOWN - Grey - ?
+
+# General
+
+- Top bar - should always be on to top of the screen 
+- Margins from left right are no more then 80px
+- Margin from top - small
+- Create JSONs with mock data
+- Do not delete json files without confirmation
+
+# pods resources recommendations screen
+
+*from left to right
+1. Checkbox to hide empty/unknown recommendations
+2. Search bar to search in containers column
+3. Drop-down to select from list of scans. Each scan is a snapshot/result of scan of krr. text before dropdown - "Scan data". Items in dropdown show date and time to select from list
+4. Export to scv button
+
+line separator
+table with results. Columns:
+- Name - name of the pod (small arrows to sort column + filter icon)
+- namespace (small arrows to sort column + filter icon)
+- kind (small arrows to sort column + filter icon)
+- Container (small arrows to sort column + filter icon)
+- Severity (small arrows to sort column + filter icon)
+- Mem (Req): down red or green up arrow; old value -> new value in bold
+- Cpu (Req): down red or green up arrow; old value -> new value in bold 

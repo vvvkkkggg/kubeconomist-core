@@ -20,3 +20,11 @@ env-down:
 
 push-metrics:
 	curl -X POST --data-binary @metrics.prom http://localhost:8428/api/v1/import/prometheus
+
+python-init:
+	uv init
+	uv venv
+	uv pip install pyyaml
+
+python-run:
+	python tools/gen-metrics.py

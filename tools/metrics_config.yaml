@@ -1,0 +1,23 @@
+metrics:
+  # https://console.yandex.cloud/folders/b1g8enqi42dal6t489ou/dns/zone/dnsa1qlkf6k5bad7ncrf/recordsets
+  - name: kubeconomist_dns_optimizer_dns_optimization_zone
+    type: gauge
+    labels:
+      cloud_id: ["9998lnqj42dal6t111o7"]
+      folder_id: ["1148enq242dal6t111o7"]
+      zone_id: ["dnsa1qlkf6k5bad7ncrf", "123a1qlkf6k5bad7ncrf", "aaaa1q5kf6k5bad7nhr1"]
+      is_used: ["true", "false"]
+    value_range: [1, 1]
+    interval: 60
+    points: 10
+
+  - name: kubeconomist_dns_optimizer_dns_optimization_zone
+    type: counter
+    labels:
+      cloud_id: ["8888lnqj42dal6t111o7"]
+      folder_id: ["8888enq242dal6t111o7", "8111lnqj42dal6tj11j7"]
+      zone_id: ["45551qlkf6k5bad7ncrf", "18asd1qlkf6k5bad7ncrf", "dnsa1qlkf6k5bad7ncrf", "dnsa1qlkf6k5bad7ncrf"]
+      is_used: ["false"]
+    value_range: [1, 1]
+    interval: 60
+    points: 10

@@ -36,3 +36,13 @@ go.work.sum
 
 node_modules/
 .vite/
+
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+dummy_100mb_1.bin
+dummy_100mb_2.bin
+dummy_100mb_3.bin

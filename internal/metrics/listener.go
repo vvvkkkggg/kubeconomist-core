@@ -248,7 +248,8 @@ func GetOptimizerRecommendations() (OptimizerRecommendations, error) {
 				}
 
 				platformOpt[nodeGroupId] = v
-
+				// case "kubeconomist_storage_optimizer_storage_optimization_class_is_optimal":
+				// case "kubeconomist_storage_optimizer_storage_optimization_price":
 			}
 		}
 	}
